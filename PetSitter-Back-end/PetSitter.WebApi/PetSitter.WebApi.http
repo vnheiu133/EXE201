@@ -1,0 +1,6 @@
+@PetSitter.WebApi_HostAddress = http://localhost:5278
+
+GET {{PetSitter.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

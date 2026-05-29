@@ -1,0 +1,10 @@
+# Global ignores
+_appdata/
+_nuget_packages/
+_EXE201_push_*/
+
+# Local logs/pids
+*.pid
+*.log
+.vs/
+.idea/
