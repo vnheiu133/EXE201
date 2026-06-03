@@ -58,10 +58,10 @@ export default function UploadProductPage() {
         <Navigation />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-4">You need to be a shop owner to access this page.</p>
+            <h1 className="text-2xl font-bold mb-4">Không có quyền truy cập</h1>
+            <p className="text-gray-600 mb-4">Bạn cần là chủ cửa hàng để truy cập trang này.</p>
             <Link href="/">
-              <Button>Go Home</Button>
+              <Button>Về trang chủ</Button>
             </Link>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function UploadProductPage() {
     setError("");
 
     if (!shopId) {
-      setError("Shop ID is missing");
+      setError("Thiếu mã cửa hàng");
       setLoading(false);
       return;
     }
@@ -120,10 +120,10 @@ export default function UploadProductPage() {
       if (res.success && res.data) {
         router.push("/dashboard");
       } else {
-        setError(res.message || "Failed to upload product");
+        setError(res.message || "Đăng sản phẩm thất bại");
       }
     } catch (err) {
-      setError("Failed to upload product. Please try again.");
+      setError("Đăng sản phẩm thất bại. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -159,11 +159,11 @@ export default function UploadProductPage() {
             <Button variant="ghost" asChild className="mb-4">
               <Link href="/shop" className="flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Shop
+                Quay lại cửa hàng
               </Link>
             </Button>
-            <h1 className="text-3xl font-bold text-gray-900">Upload New Product</h1>
-            <p className="text-gray-600 mt-2">Add a new product to your shop</p>
+            <h1 className="text-3xl font-bold text-gray-900">Đăng sản phẩm mới</h1>
+            <p className="text-gray-600 mt-2">Thêm sản phẩm mới vào cửa hàng của bạn</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -176,12 +176,12 @@ export default function UploadProductPage() {
             {/* Basic Information */}
             <Card>
               <CardHeader>
-                <CardTitle>Basic Information</CardTitle>
+                <CardTitle>Thông tin cơ bản</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
                   <Label htmlFor="productName" className="mb-2">
-                    Product Name *
+                    Tên sản phẩm *
                   </Label>
                   <Input
                     id="productName"
@@ -189,14 +189,14 @@ export default function UploadProductPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, productName: e.target.value }))
                     }
-                    placeholder="Enter product name"
+                    placeholder="Nhập tên sản phẩm"
                     required
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="description" className="mb-2">
-                    Description *
+                    Mô tả *
                   </Label>
                   <Textarea
                     id="description"
@@ -204,7 +204,7 @@ export default function UploadProductPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, description: e.target.value }))
                     }
-                    placeholder="Describe your product..."
+                    placeholder="Mô tả sản phẩm của bạn..."
                     rows={4}
                     required
                   />
@@ -213,7 +213,7 @@ export default function UploadProductPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="price" className="mb-2">
-                      Price (USD) *
+                      Giá (VND) *
                     </Label>
                     <Input
                       id="price"
@@ -230,7 +230,7 @@ export default function UploadProductPage() {
 
                   <div>
                     <Label htmlFor="stockQuantity" className="mb-2">
-                      Stock Quantity *
+                      Số lượng tồn kho *
                     </Label>
                     <Input
                       id="stockQuantity"
@@ -239,7 +239,7 @@ export default function UploadProductPage() {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, stockQuantity: e.target.value }))
                       }
-                      placeholder="Enter stock quantity"
+                      placeholder="Nhập số lượng tồn kho"
                       min="0"
                       required
                     />
@@ -249,7 +249,7 @@ export default function UploadProductPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="categoryId" className="mb-2">
-                      Category *
+                      Danh mục *
                     </Label>
                     <Select
                       value={formData.categoryId}
@@ -258,7 +258,7 @@ export default function UploadProductPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder="Chọn danh mục" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
@@ -272,7 +272,7 @@ export default function UploadProductPage() {
 
                   <div>
                     <Label htmlFor="brandId" className="mb-2">
-                      Brand *
+                      Thương hiệu *
                     </Label>
                     <Select
                       value={formData.brandId}
@@ -281,7 +281,7 @@ export default function UploadProductPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select brand" />
+                        <SelectValue placeholder="Chọn thương hiệu" />
                       </SelectTrigger>
                       <SelectContent>
                         {brands.map((brand) => (
@@ -296,7 +296,7 @@ export default function UploadProductPage() {
 
                 <div>
                   <Label htmlFor="tagId" className="mb-2">
-                    Tag *
+                    Thẻ *
                   </Label>
                   <Select
                     value={formData.tagId}
@@ -305,7 +305,7 @@ export default function UploadProductPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select tag" />
+                      <SelectValue placeholder="Chọn thẻ" />
                     </SelectTrigger>
                     <SelectContent>
                       {tags.map((tag) => (
@@ -322,8 +322,8 @@ export default function UploadProductPage() {
             {/* Product Images */}
             <Card>
               <CardHeader>
-                <CardTitle>Product Images</CardTitle>
-                <p className="text-sm text-gray-600">Upload up to 1 image of your product</p>
+                <CardTitle>Hình ảnh sản phẩm</CardTitle>
+                <p className="text-sm text-gray-600">Tải lên tối đa 1 hình ảnh cho sản phẩm</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -332,8 +332,8 @@ export default function UploadProductPage() {
                     <Upload className="mx-auto h-12 w-12 text-gray-400" />
                     <div className="mt-4 flex flex-col items-center">
                       <Label htmlFor="imageUrl" className="cursor-pointer text-center">
-                        <span className="text-blue-600 hover:text-blue-500">Upload image</span>
-                        <span className="text-gray-600"> or drag and drop</span>
+                        <span className="text-blue-600 hover:text-blue-500">Tải ảnh lên</span>
+                        <span className="text-gray-600"> hoặc kéo thả vào đây</span>
                       </Label>
                       <Input
                         id="imageUrl"
@@ -343,7 +343,7 @@ export default function UploadProductPage() {
                         className="hidden"
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF up to 10MB</p>
+                    <p className="text-xs text-gray-500 mt-2">PNG, JPG, GIF tối đa 10MB</p>
                   </div>
 
                   {/* Image Preview */}
@@ -352,7 +352,7 @@ export default function UploadProductPage() {
                       <div className="relative group">
                         <img
                           src={formData.images[0] || "/placeholder.svg"}
-                          alt="Product"
+                          alt="Sản phẩm"
                           className="w-full h-full object-contain rounded-lg border"
                         />
                         <Button
@@ -372,10 +372,10 @@ export default function UploadProductPage() {
             {/* Submit Button */}
             <div className="flex justify-end space-x-4">
               <Button type="button" variant="outline" asChild>
-                <Link href="/dashboard">Cancel</Link>
+                <Link href="/dashboard">Hủy</Link>
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? "Uploading..." : "Upload Product"}
+                {loading ? "Đang tải lên..." : "Đăng sản phẩm"}
               </Button>
             </div>
           </form>

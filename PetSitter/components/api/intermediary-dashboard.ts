@@ -1,7 +1,7 @@
 import type { IntermediaryDashboardData } from "@/types/intermediary-dashboard"
 
 export async function getIntermediaryDashboard(): Promise<IntermediaryDashboardData> {
-  const response = await fetch("http://localhost:5278/api/intermediary/dashboard", {
+  const response = await fetch("/api/intermediary/dashboard", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -10,7 +10,7 @@ export async function getIntermediaryDashboard(): Promise<IntermediaryDashboardD
   })
 
   if (!response.ok) {
-    throw new Error("Failed to fetch intermediary dashboard")
+    throw new Error("Không tải được bảng điều khiển trung gian")
   }
 
   return response.json()

@@ -111,4 +111,46 @@ public class AuthServices : IAuthServices
         return user;
     }
 
+    public async Task<Users> LoginWithGoogle(string email, string fullName, string profilePictureUrl)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        if (user != null)
+        {
+            var changed = false;
+            if (!string.IsNullOrWhiteSpace(profilePictureUrl) && user.ProfilePictureUrl != profilePictureUrl)
+            {
+                user.ProfilePictureUrl = profilePictureUrl;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                user.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+
+            return user;
+        }
+
+        user = new Users
+        {
+            UserId = Guid.NewGuid(),
+            FullName = string.IsNullOrWhiteSpace(fullName) ? email.Split('@')[0] : fullName,
+            Email = email,
+            Role = UserRole.User,
+            DateOfBirth = new DateTime(1900, 1, 1),
+            Address = string.Empty,
+            PhoneNumber = string.Empty,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
+            ProfilePictureUrl = profilePictureUrl,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        return user;
+    }
+
 }

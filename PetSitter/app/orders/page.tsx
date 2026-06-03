@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Store, MessageCircle, ArrowRight, Loader2, Calendar } from "lucide-react";
+import { Store, MessageCircle, Loader2, Calendar } from "lucide-react";
 import Link from "next/link";
 
 interface OrderItem {
@@ -47,7 +47,7 @@ export default function OrdersPage() {
       shopName: "NHÀ XUẤT BẢN KIM ĐỒNG",
       isMall: true,
       status: "shipping",
-      statusText: "SHIPPING",
+      statusText: "ĐANG VẬN CHUYỂN",
       shippingProgressText: "Người bán đang chuẩn bị hàng",
       expectedDelivery: "Dự kiến nhận hàng 29-05-2026 - 30-05-2026",
       totalAmount: 12800, // Matching 12.800đ from screenshot
@@ -55,11 +55,11 @@ export default function OrdersPage() {
         {
           itemId: "item-1",
           productId: "prod-1",
-          productName: "Comic - 7th Time Loop: The Villainess Enjoys a Carefree Life",
+          productName: "Truyện tranh - Vòng lặp lần thứ 7",
           productImage: "https://res.cloudinary.com/dmri47mzp/image/upload/v1779258589/premium_cat_food_1779258589761.png", // fallback or any image
           quantity: 1,
           price: 50000,
-          variant: "Vol.6 Shikishi Card",
+          variant: "Tập 6 kèm thẻ Shikishi",
         }
       ]
     },
@@ -68,39 +68,39 @@ export default function OrdersPage() {
       shopName: "CHS NXB Trẻ 157",
       isMall: true,
       status: "shipping",
-      statusText: "SHIPPING",
+      statusText: "ĐANG VẬN CHUYỂN",
       expectedDelivery: "Dự kiến nhận hàng 19-05-2026 - 21-05-2026",
       totalAmount: 151312, // Matching 151.312đ from screenshot
       items: [
         {
           itemId: "item-2",
           productId: "prod-2",
-          productName: "Comic - Hananoi-kun to Koi no Yamai - Vol.20 (Combo Regular + Special Edition)",
+          productName: "Truyện tranh - Hananoi-kun và bệnh tương tư - Tập 20",
           productImage: "https://res.cloudinary.com/dmri47mzp/image/upload/v1779258611/organic_dog_food_1779258611554.png", // fallback
           quantity: 1,
           price: 189140,
           originalPrice: 193000,
-          variant: "Combo Regular + Special Edition",
+          variant: "Combo bản thường + bản đặc biệt",
         }
       ]
     },
     {
       shopId: "default-shop",
-      shopName: "Mega Pet Shop",
+      shopName: "Cửa hàng thú cưng",
       isMall: false,
       status: "completed",
-      statusText: "COMPLETED",
+      statusText: "ĐÃ HOÀN THÀNH",
       expectedDelivery: "Giao hàng thành công vào 15-05-2026",
       totalAmount: 220000,
       items: [
         {
           itemId: "item-3",
           productId: "prod-3",
-          productName: "Ultra Durable Dog Chew Bone Toy",
+          productName: "Đồ chơi xương gặm siêu bền cho chó",
           productImage: "https://res.cloudinary.com/dmri47mzp/image/upload/v1779258644/dog_chew_toy_1779258644319.png",
           quantity: 2,
           price: 110000,
-          variant: "Orange",
+          variant: "Màu cam",
         }
       ]
     }
@@ -116,7 +116,7 @@ export default function OrdersPage() {
       setLoading(true);
       try {
         const storedToken = token || localStorage.getItem("token");
-        const res = await fetch("http://localhost:5278/api/orders/getallorders", {
+        const res = await fetch("/api/orders/getallorders", {
           headers: {
             Authorization: `Bearer ${storedToken}`,
           },
@@ -130,7 +130,7 @@ export default function OrdersPage() {
             shopName: order.shopName,
             isMall: true,
             status: "shipping", // default status
-            statusText: "SHIPPING",
+            statusText: "ĐANG VẬN CHUYỂN",
             expectedDelivery: "Dự kiến nhận hàng sau 3 ngày",
             totalAmount: order.totalAmount,
             items: order.items.map((item: any) => ({
@@ -140,7 +140,7 @@ export default function OrdersPage() {
               productImage: item.productImage || "/placeholder.svg",
               quantity: item.quantity,
               price: item.price,
-              variant: "Standard",
+              variant: "Tiêu chuẩn",
             })),
           }));
 
@@ -151,7 +151,7 @@ export default function OrdersPage() {
           setOrders(mockOrders);
         }
       } catch (err) {
-        console.warn("Failed to fetch API orders, using mock orders instead.", err);
+        console.warn("Không tải được đơn hàng từ API, đang dùng dữ liệu mẫu.", err);
         setOrders(mockOrders);
       } finally {
         setLoading(false);
@@ -264,7 +264,7 @@ export default function OrdersPage() {
                     <div className="flex items-center space-x-2.5">
                       {order.isMall && (
                         <span className="bg-[#d0011b] text-white text-[10px] font-extrabold px-1 rounded uppercase tracking-wider">
-                          Mall
+                          Chính hãng
                         </span>
                       )}
                       <span className="font-bold text-gray-900 text-sm">{order.shopName}</span>
@@ -275,7 +275,7 @@ export default function OrdersPage() {
                         className="bg-[#ee4d2d] text-white hover:bg-[#d03d20] h-6 px-2.5 text-xs rounded-sm gap-1 ml-2"
                       >
                         <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                        Chat
+                        Nhắn tin
                       </Button>
                       
                       <Button

@@ -3,18 +3,18 @@ import type { Service, ServiceTag } from "@/types/feature";
 export async function getListServices(): Promise<{ services: Service[]; tags: ServiceTag[] }> {
     try {
         const [serviceRes, tagRes] = await Promise.all([
-            fetch("http://localhost:5278/api/service/list-services", {
+            fetch("/api/service/list-services", {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             }),
-            fetch("http://localhost:5278/api/filter/service-tags", {
+            fetch("/api/filter/service-tags", {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             }),
         ]);
 
-        if (!serviceRes.ok) throw new Error("Failed to fetch services");
-        if (!tagRes.ok) throw new Error("Failed to fetch tags");
+        if (!serviceRes.ok) throw new Error("Không tải được dịch vụ");
+        if (!tagRes.ok) throw new Error("Không tải được thẻ");
 
         const serviceResult = await serviceRes.json();
         const tagResult = await tagRes.json();
@@ -34,12 +34,12 @@ export async function getListServices(): Promise<{ services: Service[]; tags: Se
 }
 
 export async function getServicesByShopId(shopId: string): Promise<Service[]> {
-    const response = await fetch(`http://localhost:5278/api/service/shop/${shopId}`, {
+    const response = await fetch(`/api/service/shop/${shopId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });
 
-    if (!response.ok) throw new Error("Failed to fetch shop services");
+    if (!response.ok) throw new Error("Không tải được dịch vụ của cửa hàng");
 
     const result = await response.json();
     const items = result.data || [];

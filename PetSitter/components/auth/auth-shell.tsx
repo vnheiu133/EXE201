@@ -14,7 +14,7 @@ interface AuthShellProps {
 
 function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="inline-flex items-center gap-3" aria-label="PetSitter home">
+    <Link href="/" className="inline-flex items-center gap-3" aria-label="Trang chủ PetSitter">
       <span
         className={cn(
           "flex shrink-0 items-center justify-center rounded-md bg-[#e15c45] text-white shadow-sm",
@@ -31,7 +31,7 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
 export function AuthShell({ title, description, children, contentClassName }: AuthShellProps) {
   return (
     <main className="min-h-screen bg-[#f5f8f3] text-[#16312a]">
-      <div className="auth-shell-layout">
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(24rem,0.9fr)_minmax(0,1fr)]">
         <section className="relative isolate min-h-[15rem] min-w-0 overflow-hidden bg-[#16312a] sm:min-h-[18rem] lg:min-h-screen">
           <Image
             src="/woman-laptop-dog.png"
@@ -39,11 +39,11 @@ export function AuthShell({ title, description, children, contentClassName }: Au
             fill
             priority
             sizes="(max-width: 1024px) 45vw, 100vw"
-            className="object-cover object-center contrast-[1.03] saturate-[1.04]"
+            className="z-0 object-cover object-center contrast-[1.03] saturate-[1.04]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,49,42,0.1)_0%,rgba(18,49,42,0.28)_40%,rgba(18,49,42,0.82)_100%)]" />
+          <div className="absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(18,49,42,0.1)_0%,rgba(18,49,42,0.28)_40%,rgba(18,49,42,0.82)_100%)]" />
 
-          <div className="relative flex h-full min-h-[15rem] flex-col justify-between p-5 text-white sm:min-h-[18rem] sm:p-8 lg:min-h-screen lg:p-10">
+          <div className="relative z-20 flex h-full min-h-[15rem] flex-col justify-between p-5 text-white sm:min-h-[18rem] sm:p-8 lg:min-h-screen lg:p-10">
             <BrandMark />
 
             <div className="max-w-sm pb-2">
@@ -55,7 +55,7 @@ export function AuthShell({ title, description, children, contentClassName }: Au
           </div>
         </section>
 
-        <section className="flex min-w-0 items-center justify-center px-4 py-8 sm:px-8 sm:py-12 lg:px-12">
+        <section className="relative z-30 flex min-w-0 items-center justify-center bg-[#f5f8f3] px-4 py-8 sm:px-8 sm:py-12 lg:px-12">
           <div className={cn("w-full max-w-md", contentClassName)}>
             <div className="mb-8">
               <div className="mb-6 text-[#16312a] lg:hidden">

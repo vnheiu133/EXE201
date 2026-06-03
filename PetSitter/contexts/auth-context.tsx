@@ -13,7 +13,8 @@ interface AuthContextType {
   token: string | null; 
   register: (data: any) => Promise<any>;
   login: (email: string, password: string) => Promise<any>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (idToken?: string) => Promise<any>;
+  loginWithGoogleCode: (code: string, redirectUri: string) => Promise<any>;
   logout: () => void;
   loading: boolean;
 }
@@ -95,10 +96,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithGoogle = async () => {
+  const persistGoogleSession = (res: any) => {
+    if (res.success && res.data && res.data.token && res.data.user) {
+      const backendUser = res.data.user;
+      const userData: User = {
+        userId: backendUser.userId,
+        fullName: backendUser.fullName,
+        email: backendUser.email,
+        role: mapRole(backendUser.role),
+        phoneNumber: backendUser.phoneNumber,
+        dateOfBirth: backendUser.dateOfBirth,
+        address: backendUser.address,
+        profilePictureUrl: backendUser.profilePictureUrl,
+        createdAt: backendUser.createdAt,
+      };
+      const tokenData = res.data.token;
+      setUser(userData);
+      setToken(tokenData);
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", tokenData);
+    }
+  };
+
+  const loginWithGoogle = async (idToken?: string) => {
+    if (!idToken) {
+      throw new Error("Thiếu mã xác thực Google");
+    }
+
     setLoading(true);
     try {
-      // TODO: call Google login API
+      const res = await api.googleLogin(idToken);
+      persistGoogleSession(res);
+      return res;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGoogleCode = async (code: string, redirectUri: string) => {
+    setLoading(true);
+    try {
+      const res = await api.googleCodeLogin(code, redirectUri);
+      persistGoogleSession(res);
+      return res;
     } finally {
       setLoading(false);
     }
@@ -121,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         login,
         loginWithGoogle,
+        loginWithGoogleCode,
         logout,
         loading,
       }}

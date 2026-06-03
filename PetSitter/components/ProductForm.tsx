@@ -90,23 +90,23 @@ export default function ProductForm({
       : await addProduct(form.shopId, formData);
 
     if (res.success && res.data) {
-      toast.success(`Product ${editing ? "updated" : "added"} successfully!`);
+      toast.success(editing ? "Cập nhật sản phẩm thành công!" : "Thêm sản phẩm thành công!");
       onSuccess(res.data);
       setEditing(null);
     } else {
-      toast.error(res.message || "Failed to save product");
+      toast.error(res.message || "Lưu sản phẩm thất bại");
     }
   };
 
   return (
     <div className="space-y-4">
-      <Input name="productName" placeholder="Product name" value={form.productName} onChange={handleChange} />
-      <Textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} />
-      <Input name="price" type="number" placeholder="Price" value={form.price} onChange={handleChange} />
-      <Input name="stockQuantity" type="number" placeholder="Stock" value={form.stockQuantity} onChange={handleChange} />
+      <Input name="productName" placeholder="Tên sản phẩm" value={form.productName} onChange={handleChange} />
+      <Textarea name="description" placeholder="Mô tả" value={form.description} onChange={handleChange} />
+      <Input name="price" type="number" placeholder="Giá" value={form.price} onChange={handleChange} />
+      <Input name="stockQuantity" type="number" placeholder="Tồn kho" value={form.stockQuantity} onChange={handleChange} />
 
       <Select value={form.categoryId} onValueChange={(v) => setForm((p) => ({ ...p, categoryId: v }))}>
-        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
         <SelectContent>
           {categories.map((c) => (
             <SelectItem key={c.categoryId} value={c.categoryId}>
@@ -117,7 +117,7 @@ export default function ProductForm({
       </Select>
 
       <Select value={form.brandId} onValueChange={(v) => setForm((p) => ({ ...p, brandId: v }))}>
-        <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder="Chọn thương hiệu" /></SelectTrigger>
         <SelectContent>
           {brands.map((b) => (
             <SelectItem key={b.brandId} value={b.brandId}>
@@ -128,7 +128,7 @@ export default function ProductForm({
       </Select>
 
       <Select value={form.tagId} onValueChange={(v) => setForm((p) => ({ ...p, tagId: v }))}>
-        <SelectTrigger><SelectValue placeholder="Select tag" /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder="Chọn thẻ" /></SelectTrigger>
         <SelectContent>
           {tags.map((t) => (
             <SelectItem key={t.productTagId} value={t.productTagId}>
@@ -146,7 +146,7 @@ export default function ProductForm({
       />
 
       <Button className="w-full mt-2" onClick={handleSubmit}>
-        {editing ? "Update" : "Add Product"}
+        {editing ? "Cập nhật" : "Thêm sản phẩm"}
       </Button>
     </div>
   );

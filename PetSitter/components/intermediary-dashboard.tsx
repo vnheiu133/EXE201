@@ -264,7 +264,7 @@ export default function IntermediaryDashboard() {
         setError(null)
       } catch (err) {
         if (!active) return
-        setError(err instanceof Error ? err.message : "Failed to load dashboard")
+        setError(err instanceof Error ? err.message : "Không tải được bảng điều khiển")
       } finally {
         if (active) setLoading(false)
       }
@@ -740,7 +740,7 @@ export default function IntermediaryDashboard() {
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[#e1ece7] bg-white/80 px-6 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <Badge className="bg-[#edf6f1] text-[#1f6654] hover:bg-[#edf6f1] border border-[#d6e9dd] font-semibold text-xs py-0.5">
-              Role: Intermediary Moderator
+              Vai trò: Điều phối viên trung gian
             </Badge>
             <span className="text-xs text-slate-400">·</span>
             <p className="text-xs text-slate-500 font-medium">Hệ thống vận hành đa shop thú cưng</p>

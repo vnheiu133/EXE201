@@ -8,3 +8,9 @@ _EXE201_push_*/
 *.log
 .vs/
 .idea/
+
+# Build/test output
+PetSitter/.next/
+PetSitter/.next-build/
+PetSitter/test-results/
+PetSitter-Back-end/publish/

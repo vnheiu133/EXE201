@@ -192,7 +192,7 @@ export default function ProductDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="bg-[#d0011b] text-white text-[10px] font-extrabold px-1 rounded uppercase tracking-wider leading-none py-0.5">
-                  Mall
+                  Chính hãng
                 </span>
                 <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-100 border-none font-medium text-xs px-2.5 py-0.5 rounded-sm">
                   {product.categoryName}
@@ -255,7 +255,7 @@ export default function ProductDetailPage() {
                     <img 
                       src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/assets/c5352c3c62934a4c6a65529f7cf7c6c4.png" 
                       className="w-5 h-5 object-contain"
-                      alt="Free Shipping"
+                      alt="Miễn phí vận chuyển"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                     <span>Miễn phí vận chuyển</span>
@@ -353,21 +353,21 @@ export default function ProductDetailPage() {
           <div className="flex items-center space-x-4 border-r-0 md:border-r pr-0 md:pr-8 border-gray-100 flex-1">
             <div className="relative">
               <div className="w-16 h-16 rounded-full bg-orange-100 border border-orange-200 overflow-hidden flex items-center justify-center">
-                <img src={getAvatarUrl(product.shopImageUrl, DEFAULT_SHOP_AVATAR)} alt={product.shopName || "Shop"} className="w-full h-full object-cover" />
+                <img src={getAvatarUrl(product.shopImageUrl, DEFAULT_SHOP_AVATAR)} alt={product.shopName || "Cửa hàng"} className="w-full h-full object-cover" />
               </div>
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full animate-pulse" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-1.5">
-                {product.shopName || "Mega Pet Shop"}
+                {product.shopName || "Cửa hàng thú cưng"}
               </h3>
               <p className="text-xs text-gray-500 mb-3">Hoạt động 5 phút trước</p>
               <div className="flex space-x-2">
                 <Button size="sm" variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 gap-1.5" onClick={() => router.push(`/chat?new=${product.shopId}`)}>
-                  <MessageCircle className="w-4 h-4" /> Chat ngay
+                  <MessageCircle className="w-4 h-4" /> Nhắn tin ngay
                 </Button>
                 <Button size="sm" variant="ghost" className="bg-gray-50 hover:bg-gray-100 text-gray-700 gap-1.5" onClick={() => router.push(`/shop?shopId=${product.shopId}`)}>
-                  <Store className="w-4 h-4" /> Xem Shop
+                  <Store className="w-4 h-4" /> Xem cửa hàng
                 </Button>
               </div>
             </div>

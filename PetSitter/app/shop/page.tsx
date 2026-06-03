@@ -47,7 +47,7 @@ function ShopPageContent() {
     const productRequest = shopIdParam
       ? getProductsByShopId(shopIdParam).then((response) => {
           if (!response.success) {
-            throw new Error(response.message || "Khong the tai san pham cua shop")
+            throw new Error(response.message || "Không thể tải sản phẩm của cửa hàng")
           }
           return response.data || []
         })
@@ -100,7 +100,7 @@ function ShopPageContent() {
     if (!shopIdParam) return ""
 
     const product = filterSourceProducts[0]
-    return product?.shopName || shopServices[0]?.shop?.shopName || "Partner shop"
+    return product?.shopName || shopServices[0]?.shop?.shopName || "Cửa hàng đối tác"
   }, [filterSourceProducts, shopIdParam, shopServices])
 
   const filteredProducts = useMemo(() => {
@@ -132,6 +132,12 @@ function ShopPageContent() {
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage))
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const goToPage = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages)
+    setCurrentPage(nextPage)
+    window.scrollTo({ top: 520, behavior: "smooth" })
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -170,9 +176,9 @@ function ShopPageContent() {
                   <Store className="size-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase text-[#b44735]">Trang chủ shop</p>
+                  <p className="text-xs font-semibold uppercase text-[#b44735]">Trang cửa hàng</p>
                   <h2 className="text-xl font-semibold text-[#16312a]">{activeShopName}</h2>
-                  <p className="text-sm text-[#687d76]">Sản phẩm và dịch vụ đang cung cấp bởi shop này</p>
+                  <p className="text-sm text-[#687d76]">Sản phẩm và dịch vụ đang cung cấp bởi cửa hàng này</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => router.push("/shop")}>
@@ -184,7 +190,7 @@ function ShopPageContent() {
               <div className="mb-5 flex items-end justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase text-[#b44735]">Sản phẩm</p>
-                  <h3 className="text-2xl font-semibold text-[#16312a]">Sản phẩm của shop</h3>
+                  <h3 className="text-2xl font-semibold text-[#16312a]">Sản phẩm của cửa hàng</h3>
                 </div>
                 <Select
                   value={filters.sortBy}
@@ -208,28 +214,72 @@ function ShopPageContent() {
                 <div className="rounded-lg border bg-white py-8 text-center text-red-600">{error}</div>
               ) : filteredProducts.length === 0 ? (
                 <div className="rounded-lg border bg-white py-16 text-center text-[#687d76]">
-                  Shop này hiện chưa có sản phẩm nào.
+                  Cửa hàng này hiện chưa có sản phẩm nào.
                 </div>
               ) : (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.productId} product={product} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {paginatedProducts.map((product) => (
+                      <ProductCard key={product.productId} product={product} />
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        aria-label="Trang trước"
+                        className="h-12 w-12 rounded-md p-0"
+                      >
+                        <ChevronLeft className="size-4" />
+                      </Button>
+                      {Array.from({ length: totalPages }, (_, index) => {
+                        const page = index + 1
+                        const isActive = currentPage === page
+                        return (
+                          <button
+                            key={page}
+                            type="button"
+                            onClick={() => goToPage(page)}
+                            aria-current={isActive ? "page" : undefined}
+                            className={`flex h-12 w-12 items-center justify-center rounded-md border text-base font-semibold shadow-sm transition-all ${
+                              isActive
+                                ? "border-[#a23820] bg-[#a23820] text-white"
+                                : "border-gray-200 bg-white text-[#16312a] hover:border-[#a23820] hover:text-[#a23820]"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      })}
+                      <Button
+                        variant="outline"
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        aria-label="Trang tiếp theo"
+                        className="h-12 w-12 rounded-md p-0"
+                      >
+                        <ChevronRight className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
             <div>
               <div className="mb-5">
                 <p className="text-xs font-semibold uppercase text-[#b44735]">Dịch vụ</p>
-                <h3 className="text-2xl font-semibold text-[#16312a]">Dịch vụ của shop</h3>
+                <h3 className="text-2xl font-semibold text-[#16312a]">Dịch vụ của cửa hàng</h3>
               </div>
 
               {servicesLoading ? (
                 <div className="rounded-lg border bg-white py-16 text-center text-[#687d76]">Đang tải dịch vụ của shop...</div>
               ) : shopServices.length === 0 ? (
                 <div className="rounded-lg border bg-white py-16 text-center text-[#687d76]">
-                  Shop này hiện chưa có dịch vụ nào.
+                  Cửa hàng này hiện chưa có dịch vụ nào.
                 </div>
               ) : (
                 <div className="grid gap-6">
@@ -349,12 +399,13 @@ function ShopPageContent() {
                     </div>
 
                     {totalPages > 1 && (
-                      <div className="flex flex-wrap items-center justify-center gap-2">
+                      <div className="flex flex-wrap items-center justify-center gap-3">
                         <Button
                           variant="outline"
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          onClick={() => goToPage(currentPage - 1)}
                           disabled={currentPage === 1}
-                          aria-label="Previous page"
+                          className="h-12 w-12 rounded-md p-0"
+                          aria-label="Trang trước"
                         >
                           <ChevronLeft className="size-4" />
                         </Button>
@@ -364,7 +415,12 @@ function ShopPageContent() {
                             <Button
                               key={page}
                               variant={currentPage === page ? "default" : "outline"}
-                              onClick={() => setCurrentPage(page)}
+                              onClick={() => goToPage(page)}
+                              className={`h-12 w-12 rounded-md p-0 text-base font-semibold ${
+                                currentPage === page
+                                  ? "border-[#a23820] bg-[#a23820] text-white hover:bg-[#8e2e1a]"
+                                  : "border-gray-200 bg-white text-[#16312a] hover:border-[#a23820] hover:text-[#a23820]"
+                              }`}
                             >
                               {page}
                             </Button>
@@ -372,9 +428,10 @@ function ShopPageContent() {
                         })}
                         <Button
                           variant="outline"
-                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                          onClick={() => goToPage(currentPage + 1)}
                           disabled={currentPage === totalPages}
-                          aria-label="Next page"
+                          className="h-12 w-12 rounded-md p-0"
+                          aria-label="Trang tiếp theo"
                         >
                           <ChevronRight className="size-4" />
                         </Button>

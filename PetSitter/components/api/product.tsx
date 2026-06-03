@@ -9,14 +9,14 @@ function safeImage(url: any) {
 }
 
 export async function listProducts(): Promise<Product[]> {
-    const res = await fetch("http://localhost:5278/api/product/list-products", {
+    const res = await fetch("/api/product/list-products", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
     });
 
     if (!res.ok) {
-        throw new Error("Listing products failed");
+        throw new Error("Không tải được danh sách sản phẩm");
     }
 
     const result = await res.json();
@@ -44,12 +44,12 @@ export async function listProducts(): Promise<Product[]> {
 }
 
 export async function getProductById(id: string): Promise<Product> {
-    const res = await fetch(`http://localhost:5278/api/product/product/${id}`, {
+    const res = await fetch(`/api/product/product/${id}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });
 
-    if (!res.ok) throw new Error("Getting product failed");
+    if (!res.ok) throw new Error("Không tải được sản phẩm");
 
     const result = await res.json();
     const item = result.data;
@@ -77,12 +77,12 @@ export async function getProductById(id: string): Promise<Product> {
 }
 
 export async function getRelatedProduct(id: string): Promise<Product[]> {
-    const res = await fetch(`http://localhost:5278/api/product/related-products/${id}`, {
+    const res = await fetch(`/api/product/related-products/${id}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
     });
 
-    if (!res.ok) throw new Error("No related products found");
+    if (!res.ok) throw new Error("Không tìm thấy sản phẩm tương tự");
 
     const result = await res.json();
     const items = result.data ?? [];
@@ -110,12 +110,12 @@ export async function getRelatedProduct(id: string): Promise<Product[]> {
 }
 
 export async function productReview(productId: string): Promise<Review[]> {
-    const res = await fetch(`http://localhost:5278/api/product/reviews/${productId}`, {
+    const res = await fetch(`/api/product/reviews/${productId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" }
     })
 
-    if (!res.ok) throw new Error("No reviews found")
+    if (!res.ok) throw new Error("Không tìm thấy đánh giá")
     const result = await res.json()
     const items = result.data ?? []
 
@@ -140,12 +140,12 @@ export async function writeProductReview(review: {
     context: string
     rating: number
 }) {
-    const res = await fetch("http://localhost:5278/api/product/write-review", {
+    const res = await fetch("/api/product/write-review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(review),
     })
 
-    if (!res.ok) throw new Error("Failed to write review")
+    if (!res.ok) throw new Error("Không gửi được đánh giá")
     return res.json()
 }

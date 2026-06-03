@@ -1,4 +1,4 @@
-﻿using Net.payOS.Types;
+using Net.payOS.Types;
 using PetSitter.DataAccess.Repository.Interfaces;
 using PetSitter.Models;
 using PetSitter.Models.DTO;
@@ -27,6 +27,33 @@ namespace PetSitter.Services.Implements
 
         public async Task<CreatePaymentResult> CreateOrderAndInitiatePayment(CheckoutRequestDto checkoutRequest, Guid userId)
         {
+            var (createdOrder, itemsForPayOS) = await CreatePendingOrder(checkoutRequest, userId);
+
+            var paymentData = new PaymentData(
+                orderCode: createdOrder.OrderCode,
+                amount: (int)createdOrder.TotalAmount,
+                description: $"PetSitter {createdOrder.OrderCode}",
+                items: itemsForPayOS,
+                cancelUrl: "http://localhost:5100/payment/cancel",
+                returnUrl: "http://localhost:5100/payment/success"
+            );
+
+            return await _paymentService.CreatePaymentLink(paymentData);
+        }
+
+        public async Task<Orders> CreateCashOnDeliveryOrder(CheckoutRequestDto checkoutRequest, Guid userId)
+        {
+            var (createdOrder, _) = await CreatePendingOrder(checkoutRequest, userId);
+            return createdOrder;
+        }
+
+        private async Task<(Orders CreatedOrder, List<ItemData> ItemsForPayOS)> CreatePendingOrder(CheckoutRequestDto checkoutRequest, Guid userId)
+        {
+            if (checkoutRequest.CartItems == null || checkoutRequest.CartItems.Count == 0)
+            {
+                throw new Exception("Cart is empty.");
+            }
+
             var productIds = checkoutRequest.CartItems.Select(c => c.ProductId).ToList();
             var productsFromDb = await _productRepository.GetByIdsAsync(productIds);
 
@@ -49,8 +76,10 @@ namespace PetSitter.Services.Implements
                     Price = product.Price
                 });
 
-                // Tạo ItemData cho PayOS
-                itemsForPayOS.Add(new ItemData(product.ProductName, cartItem.Quantity, (int)product.Price));
+                var payOsItemName = product.ProductName.Length > 25
+                    ? product.ProductName.Substring(0, 25)
+                    : product.ProductName;
+                itemsForPayOS.Add(new ItemData(payOsItemName, cartItem.Quantity, (int)product.Price));
 
                 totalAmount += product.Price * cartItem.Quantity;
             }
@@ -69,20 +98,7 @@ namespace PetSitter.Services.Implements
             };
 
             var createdOrder = await _orderRepository.CreateOrderAsync(newOrder);
-
-            // Tạo đối tượng PaymentData theo đúng tài liệu
-            var paymentData = new PaymentData(
-                orderCode: createdOrder.OrderCode,
-                amount: (int)createdOrder.TotalAmount,
-                description: $"Orders #{createdOrder.OrderCode}_PetSitter",
-
-                items: itemsForPayOS,
-                cancelUrl: "http://localhost:3000/payment/cancel", // Thay bằng URL của bạn
-                returnUrl: "http://localhost:3000/payment/success" // Thay bằng URL của bạn
-            );
-
-            // Trả về kết quả từ việc tạo link thanh toán
-            return await _paymentService.CreatePaymentLink(paymentData);
+            return (createdOrder, itemsForPayOS);
         }
     }
 }

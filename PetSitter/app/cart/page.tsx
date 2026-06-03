@@ -22,7 +22,7 @@ const currency = new Intl.NumberFormat("vi-VN")
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart()
-  const [selectedIds, setSelectedIds] = useState<Array<string | number>>([])
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   useEffect(() => {
     setSelectedIds((current) => {
@@ -35,7 +35,7 @@ export default function CartPage() {
   const groupedCart = useMemo(() => {
     return cart.reduce<Record<string, CartGroup>>((groups, item) => {
       const shopId = item.shopId || "default-shop"
-      const shopName = item.shopName || "Mega Pet Shop"
+      const shopName = item.shopName || "Cửa hàng thú cưng"
 
       if (!groups[shopId]) {
         groups[shopId] = { shopId, shopName, items: [] }
@@ -50,7 +50,7 @@ export default function CartPage() {
   const selectedTotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const allSelected = cart.length > 0 && selectedIds.length === cart.length
 
-  const setItemSelected = (productId: string | number, checked: boolean) => {
+  const setItemSelected = (productId: string, checked: boolean) => {
     setSelectedIds((current) => {
       if (checked) return current.includes(productId) ? current : [...current, productId]
       return current.filter((id) => id !== productId)
@@ -150,7 +150,7 @@ export default function CartPage() {
                         href={`/shop?shopId=${group.shopId}`}
                         className="shrink-0 text-xs font-semibold text-orange-500 transition-colors hover:text-orange-600"
                       >
-                        Xem Shop
+                        Xem cửa hàng
                       </Link>
                     </div>
 

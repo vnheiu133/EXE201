@@ -28,7 +28,7 @@ export function ContactButton({ shopId, serviceId, serviceName, shopName, classN
     setIsLoading(true)
     try {
       // Create or get existing conversation
-      const response = await fetch("http://localhost:5278/api/chat/conversations", {
+      const response = await fetch("/api/chat/conversations", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -62,7 +62,7 @@ export function ContactButton({ shopId, serviceId, serviceName, shopName, classN
       ) : (
         <MessageCircle className="h-4 w-4 mr-2" />
       )}
-      Contact
+      Liên hệ
     </Button>
   )
 }

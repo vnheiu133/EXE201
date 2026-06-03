@@ -13,7 +13,7 @@ import type { Blog, BlogFilters, BlogTag } from "@/types/blog";
 // ==================== MOCK DATA FOR FALLBACK ====================
 const MOCK_AUTHOR = {
   userId: "author-1",
-  fullName: "PetSitter Team",
+  fullName: "Đội ngũ PetSitter",
   profilePictureUrl: "/placeholder-user.jpg",
   role: 1,
   dateOfBirth: "",
@@ -119,11 +119,13 @@ export default function BlogPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [tags, setTags] = useState<BlogTag[]>([]);
   const [filters, setFilters] = useState<BlogFilters>({
-    category: "All",
+    category: "Tất cả",
     searchQuery: "",
     tagId: null,
   });
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 4;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,7 +135,7 @@ export default function BlogPage() {
         setBlogs(blogData && blogData.length > 0 ? blogData : MOCK_BLOGS);
         setTags(tagData && tagData.length > 0 ? tagData : MOCK_TAGS);
       } catch (err) {
-        console.warn("Failed to fetch blog data, using fallbacks:", err);
+        console.warn("Không tải được dữ liệu bài viết, đang dùng dữ liệu mẫu:", err);
         setBlogs(MOCK_BLOGS);
         setTags(MOCK_TAGS);
       } finally {
@@ -153,6 +155,19 @@ export default function BlogPage() {
       return matchesSearch && matchesTag;
     });
   }, [blogs, filters]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / postsPerPage));
+  const paginatedPosts = filteredPosts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
+
+  const handlePageChange = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages);
+    setCurrentPage(nextPage);
+    window.scrollTo({ top: 520, behavior: "smooth" });
+  };
 
   const recentPostsList = useMemo(() => {
     const source = blogs.length > 0 ? blogs : MOCK_BLOGS;
@@ -209,7 +224,12 @@ export default function BlogPage() {
           <div className="lg:col-span-3">
             <BlogFilters filters={filters} setFilters={setFilters} tags={tags} />
             
-            <BlogList posts={filteredPosts} />
+            <BlogList
+              posts={paginatedPosts}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
 
           <div className="space-y-10">
@@ -279,7 +299,17 @@ function BlogFilters({
   );
 }
 
-function BlogList({ posts }: { posts: Blog[] }) {
+function BlogList({
+  posts,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  posts: Blog[];
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
   const getTagColor = (tagName: string) => {
     switch (tagName.toLowerCase()) {
       case "training":
@@ -357,17 +387,30 @@ function BlogList({ posts }: { posts: Blog[] }) {
         ))}
       </div>
 
-      <div className="flex items-center justify-center gap-2 mt-16">
-        <button className="w-10 h-10 flex items-center justify-center rounded-md bg-[#a23820] text-white font-medium shadow-sm cursor-pointer transition-colors">
-          1
-        </button>
-        <button className="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all">
-          2
-        </button>
-        <button className="w-10 h-10 flex items-center justify-center rounded-md border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all">
-          3
-        </button>
-      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 mt-16">
+          {Array.from({ length: totalPages }, (_, index) => {
+            const page = index + 1;
+            const isActive = currentPage === page;
+
+            return (
+              <button
+                key={page}
+                type="button"
+                onClick={() => onPageChange(page)}
+                aria-current={isActive ? "page" : undefined}
+                className={`flex h-12 w-12 items-center justify-center rounded-md border text-base font-semibold shadow-sm transition-all ${
+                  isActive
+                    ? "border-[#a23820] bg-[#a23820] text-white"
+                    : "border-gray-200 bg-white text-[#16312a] hover:border-[#a23820] hover:text-[#a23820]"
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

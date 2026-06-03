@@ -65,11 +65,28 @@ public class Program
         {
             options.AddPolicy("AllowNextJsApp", policy =>
             {
-                policy.WithOrigins(
+                var configuredOrigins = builder.Configuration
+                    .GetSection("Cors:AllowedOrigins")
+                    .Get<string[]>()
+                    ?? Array.Empty<string>();
+
+                var allowedOrigins = new[]
+                    {
                         "http://localhost:3000",
                         "http://localhost:3001",
                         "http://localhost:3002",
-                        "https://pet-sitter-seven.vercel.app")
+                        "http://localhost:5100",
+                        "https://localhost:5100",
+                        "https://pet-sitter-seven.vercel.app",
+                        "https://petshiter.vercel.app",
+                        "https://www.petshiter.com",
+                        "https://petshiter.com"
+                    }
+                    .Concat(configuredOrigins)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                policy.WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();

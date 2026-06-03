@@ -40,7 +40,7 @@ export function ProductCard({ product }: ProductCardProps) {
               type="button"
               variant="ghost"
               size="icon"
-              aria-label={`Save ${product.productName}`}
+              aria-label={`Lưu ${product.productName}`}
               className="absolute right-3 top-3 size-9 border border-white/80 bg-white/88 text-[#526761] shadow-sm backdrop-blur hover:bg-white hover:text-[#b44735]"
               onClick={toggleFavorite}
             >

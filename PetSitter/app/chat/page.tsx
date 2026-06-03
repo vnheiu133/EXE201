@@ -20,7 +20,7 @@ import ChatPageContent from "./chatPageContent";
 export default function ChatPage() {
   return (
     <Suspense fallback={<div className="flex h-screen items-center justify-center text-gray-500">
-      Loading chat...
+      Đang tải trò chuyện...
     </div>}>
       <ChatPageContent />
     </Suspense>

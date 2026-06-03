@@ -107,34 +107,34 @@ export default function ProfilePage() {
 
   const handleSaveShopImage = async () => {
     try {
-      if (!shopData?.shopId) throw new Error("Shop not found");
-      if (!shopImageUrl.trim()) throw new Error("Shop image URL is required");
+      if (!shopData?.shopId) throw new Error("Không tìm thấy cửa hàng");
+      if (!shopImageUrl.trim()) throw new Error("Vui lòng nhập URL ảnh cửa hàng");
 
       const response = await updateShopImage(shopData.shopId, shopImageUrl.trim());
-      if (!response.success) throw new Error(response.message || "Failed to update shop image");
+      if (!response.success) throw new Error(response.message || "Cập nhật ảnh cửa hàng thất bại");
 
       setShopData(response.data);
       setError(null);
-      setSuccess("Shop image updated successfully");
+      setSuccess("Cập nhật ảnh cửa hàng thành công");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred while updating shop image");
+      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi cập nhật ảnh cửa hàng");
     }
   };
 
   const handleSaveProfile = async () => {
     try {
       const userId = authUser?.userId || (storedUser?.userId ?? "");
-      if (!userId) throw new Error("User ID not found");
+      if (!userId) throw new Error("Không tìm thấy mã người dùng");
 
       // Validation
       if (!formData.fullName || formData.fullName.length < 2) {
-        throw new Error("Full name must be at least 2 characters");
+        throw new Error("Họ và tên phải có ít nhất 2 ký tự");
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        throw new Error("Invalid email format");
+        throw new Error("Email không đúng định dạng");
       }
       if (formData.phoneNumber && !/^\d{10,12}$/.test(formData.phoneNumber)) {
-        throw new Error("Phone number must be 10-12 digits");
+        throw new Error("Số điện thoại phải có 10-12 chữ số");
       }
 
       // Chuyển đổi dateOfBirth sang định dạng ISO
@@ -169,24 +169,24 @@ export default function ProfilePage() {
 
       setIsEditing(false);
       setError(null);
-      setSuccess("Profile updated successfully");
+      setSuccess("Cập nhật hồ sơ thành công");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred while saving profile");
+      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi lưu hồ sơ");
     }
   };
 
   const handleChangePassword = async () => {
     try {
       const userId = authUser?.userId || (storedUser?.userId ?? "");
-      if (!userId) throw new Error("User ID not found");
+      if (!userId) throw new Error("Không tìm thấy mã người dùng");
 
       // Validation
       if (passwordData.newPassword.length < 8) {
-        setError("New password must be at least 8 characters");
+        setError("Mật khẩu mới phải có ít nhất 8 ký tự");
         return;
       }
       if (passwordData.newPassword !== passwordData.confirmPassword) {
-        setError("New password and confirm password do not match");
+        setError("Mật khẩu mới và xác nhận mật khẩu không khớp");
         return;
       }
 
@@ -199,9 +199,9 @@ export default function ProfilePage() {
       setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
       setIsChangingPassword(false);
       setError(null);
-      setSuccess("Password changed successfully");
+      setSuccess("Đổi mật khẩu thành công");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred while changing password");
+      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi đổi mật khẩu");
     }
   };
 
@@ -235,10 +235,10 @@ export default function ProfilePage() {
   const currentRole = authUser?.role || storedUser?.role;
   const roleLabel =
     currentRole === UserRole.Shop || currentRole === 2 || currentRole === "shop"
-      ? "Shop Owner"
+      ? "Chủ cửa hàng"
       : currentRole === UserRole.Intermediary || currentRole === 3 || currentRole === "intermediary"
-        ? "Intermediary"
-        : "Regular User";
+        ? "Trung gian"
+        : "Người dùng";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -263,10 +263,7 @@ export default function ProfilePage() {
                 <div>
                   <CardTitle className="text-2xl">{formData.fullName}</CardTitle>
                   <CardDescription className="text-lg">{formData.email}</CardDescription>
-                  <Badge
-                    variant={roleLabel === "Regular User" ? "secondary" : "default"}
-                    className="mt-2"
-                  >
+                  <Badge variant={roleLabel === "Người dùng" ? "secondary" : "default"} className="mt-2">
                     {roleLabel}
                   </Badge>
                 </div>
@@ -280,23 +277,23 @@ export default function ProfilePage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>Manage your personal information</CardDescription>
+                    <CardTitle>Thông tin hồ sơ</CardTitle>
+                    <CardDescription>Quản lý thông tin cá nhân của bạn</CardDescription>
                   </div>
                   {!isEditing ? (
                     <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
                       <EditIcon className="w-4 h-4 mr-2" />
-                      Edit
+                      Chỉnh sửa
                     </Button>
                   ) : (
                     <div className="flex space-x-2">
                       <Button onClick={handleSaveProfile} size="sm" disabled={error !== null}>
                         <SaveIcon className="w-4 h-4 mr-2" />
-                        Save
+                        Lưu
                       </Button>
                       <Button onClick={handleCancel} variant="outline" size="sm">
                         <XIcon className="w-4 h-4 mr-2" />
-                        Cancel
+                        Hủy
                       </Button>
                     </div>
                   )}
@@ -306,7 +303,7 @@ export default function ProfilePage() {
                   {success && <p className="text-green-500">{success}</p>}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
+                      <Label htmlFor="fullName">Họ và tên</Label>
                       {isEditing ? (
                         <Input
                           id="fullName"
@@ -322,7 +319,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
+                      <Label htmlFor="email">Địa chỉ email</Label>
                       {isEditing ? (
                         <Input
                           id="email"
@@ -339,7 +336,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <Label htmlFor="phoneNumber">Số điện thoại</Label>
                       {isEditing ? (
                         <Input
                           id="phoneNumber"
@@ -349,13 +346,13 @@ export default function ProfilePage() {
                       ) : (
                         <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
                           <UserIcon className="w-4 h-4 text-gray-500" />
-                          <span>{formData.phoneNumber || "Not provided"}</span>
+                          <span>{formData.phoneNumber || "Chưa cung cấp"}</span>
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                      <Label htmlFor="dateOfBirth">Ngày sinh</Label>
                       {isEditing ? (
                         <Input
                           id="dateOfBirth"
@@ -366,13 +363,13 @@ export default function ProfilePage() {
                       ) : (
                         <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
                           <CalendarIcon className="w-4 h-4 text-gray-500" />
-                          <span>{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : "Not provided"}</span>
+                          <span>{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString("vi-VN") : "Chưa cung cấp"}</span>
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
+                      <Label htmlFor="address">Địa chỉ</Label>
                       {isEditing ? (
                         <Input
                           id="address"
@@ -382,17 +379,15 @@ export default function ProfilePage() {
                       ) : (
                         <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded">
                           <MapPinIcon className="w-4 h-4 text-gray-500" />
-                          <span>{formData.address || "Not provided"}</span>
+                          <span>{formData.address || "Chưa cung cấp"}</span>
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Account Type</Label>
+                      <Label>Loại tài khoản</Label>
                       <div className="p-2 bg-gray-50 rounded">
-                        <Badge
-                          variant={roleLabel === "Regular User" ? "secondary" : "default"}
-                        >
+                        <Badge variant={roleLabel === "Người dùng" ? "secondary" : "default"}>
                           {roleLabel}
                         </Badge>
                       </div>
@@ -405,23 +400,23 @@ export default function ProfilePage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle>Change Password</CardTitle>
-                    <CardDescription>Update your account password</CardDescription>
+                    <CardTitle>Đổi mật khẩu</CardTitle>
+                    <CardDescription>Cập nhật mật khẩu tài khoản của bạn</CardDescription>
                   </div>
                   {!isChangingPassword ? (
                     <Button onClick={() => setIsChangingPassword(true)} variant="outline" size="sm">
                       <EditIcon className="w-4 h-4 mr-2" />
-                      Change
+                      Đổi
                     </Button>
                   ) : (
                     <div className="flex space-x-2">
                       <Button onClick={handleChangePassword} size="sm" disabled={error !== null}>
                         <SaveIcon className="w-4 h-4 mr-2" />
-                        Save
+                        Lưu
                       </Button>
                       <Button onClick={handleCancel} variant="outline" size="sm">
                         <XIcon className="w-4 h-4 mr-2" />
-                        Cancel
+                        Hủy
                       </Button>
                     </div>
                   )}
@@ -433,7 +428,7 @@ export default function ProfilePage() {
                       {success && <p className="text-green-500">{success}</p>}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="oldPassword">Old Password</Label>
+                          <Label htmlFor="oldPassword">Mật khẩu cũ</Label>
                           <Input
                             id="oldPassword"
                             type="password"
@@ -442,7 +437,7 @@ export default function ProfilePage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="newPassword">New Password</Label>
+                          <Label htmlFor="newPassword">Mật khẩu mới</Label>
                           <Input
                             id="newPassword"
                             type="password"
@@ -451,7 +446,7 @@ export default function ProfilePage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="confirmPassword">Confirm Password</Label>
+                          <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
                           <Input
                             id="confirmPassword"
                             type="password"
@@ -470,8 +465,8 @@ export default function ProfilePage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Account Actions</CardTitle>
-                  <CardDescription>Manage your account settings</CardDescription>
+                  <CardTitle>Thao tác tài khoản</CardTitle>
+                  <CardDescription>Quản lý cài đặt tài khoản của bạn</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Button
@@ -479,17 +474,17 @@ export default function ProfilePage() {
                     variant="outline"
                     className="w-full justify-start bg-transparent"
                   >
-                    Change Password
+                    Đổi mật khẩu
                   </Button>
                   <Button variant="outline" className="w-full justify-start bg-transparent">
-                    Privacy Settings
+                    Cài đặt quyền riêng tư
                   </Button>
                   <Button variant="outline" className="w-full justify-start bg-transparent">
-                    Notification Settings
+                    Cài đặt thông báo
                   </Button>
                   <Separator />
                   <Button onClick={logout} variant="destructive" className="w-full">
-                    Sign Out
+                    Đăng xuất
                   </Button>
                 </CardContent>
               </Card>
@@ -497,24 +492,24 @@ export default function ProfilePage() {
               {isShopOwner && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Shop Profile</CardTitle>
-                    <CardDescription>Update your shop avatar shown to customers</CardDescription>
+                    <CardTitle>Hồ sơ cửa hàng</CardTitle>
+                    <CardDescription>Cập nhật ảnh đại diện cửa hàng hiển thị với khách hàng</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-4">
                       <Avatar className="h-16 w-16">
-                        <AvatarImage src={shopAvatarUrl} alt={shopData?.shopName || "Shop"} className="object-cover" />
+                        <AvatarImage src={shopAvatarUrl} alt={shopData?.shopName || "Cửa hàng"} className="object-cover" />
                         <AvatarFallback className="bg-orange-100 p-0">
-                          <img src={DEFAULT_SHOP_AVATAR} alt={shopData?.shopName || "Shop"} className="h-full w-full object-cover" />
+                          <img src={DEFAULT_SHOP_AVATAR} alt={shopData?.shopName || "Cửa hàng"} className="h-full w-full object-cover" />
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="truncate font-semibold">{shopData?.shopName || "Your shop"}</p>
+                        <p className="truncate font-semibold">{shopData?.shopName || "Cửa hàng của bạn"}</p>
                         <p className="text-sm text-gray-500">{shopData?.location || "Da Nang"}</p>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="shopImageUrl">Shop avatar URL</Label>
+                      <Label htmlFor="shopImageUrl">URL ảnh đại diện cửa hàng</Label>
                       <Input
                         id="shopImageUrl"
                         value={shopImageUrl}
@@ -524,7 +519,7 @@ export default function ProfilePage() {
                     </div>
                     <Button onClick={handleSaveShopImage} className="w-full justify-start">
                       <SaveIcon className="mr-2 h-4 w-4" />
-                      Save Shop Avatar
+                      Lưu ảnh cửa hàng
                     </Button>
                   </CardContent>
                 </Card>
@@ -533,19 +528,19 @@ export default function ProfilePage() {
               {isShopOwner && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Shop Owner Tools</CardTitle>
-                    <CardDescription>Manage your shop and products</CardDescription>
+                    <CardTitle>Công cụ chủ cửa hàng</CardTitle>
+                    <CardDescription>Quản lý cửa hàng và sản phẩm của bạn</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Button onClick={() => router.push("/dashboard")} className="w-full justify-start">
-                      Shop Dashboard
+                      Bảng điều khiển cửa hàng
                     </Button>
                     <Button
                       onClick={() => router.push("/shop/upload")}
                       variant="outline"
                       className="w-full justify-start"
                     >
-                      Upload Product
+                      Đăng sản phẩm
                     </Button>
                   </CardContent>
                 </Card>

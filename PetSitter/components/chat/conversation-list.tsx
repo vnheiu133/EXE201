@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/auth-context"
 import type { Conversation, Participant } from "@/types/chat" // Import thêm Participant
 import { UserRole } from "@/enum/UserRole"
 import { formatDistanceToNow, parseISO } from "date-fns"
+import { vi } from "date-fns/locale"
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -36,13 +37,13 @@ export function ConversationList({ onSelectConversation, selectedConversationId,
     return (
       <Card className="h-[600px]">
         <CardHeader>
-          <CardTitle>Messages</CardTitle>
+          <CardTitle>Tin nhắn</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading conversations...</p>
+              <p className="text-muted-foreground">Đang tải cuộc trò chuyện...</p>
             </div>
           </div>
         </CardContent>
@@ -63,12 +64,12 @@ export function ConversationList({ onSelectConversation, selectedConversationId,
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <MessageCircle className="h-5 w-5" />
-          <span>Messages</span>
+          <span>Tin nhắn</span>
         </CardTitle>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search conversations..."
+            placeholder="Tìm cuộc trò chuyện..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -80,9 +81,9 @@ export function ConversationList({ onSelectConversation, selectedConversationId,
           {filteredConversations.length === 0 ? (
             <div className="text-center py-8 px-4">
               <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold text-lg mb-2">No conversations yet</h3>
+              <h3 className="font-semibold text-lg mb-2">Chưa có cuộc trò chuyện</h3>
               <p className="text-muted-foreground text-sm">
-                Start chatting with pet care providers to see your conversations here
+                Bắt đầu trò chuyện với nhà cung cấp dịch vụ để xem cuộc trò chuyện tại đây.
               </p>
             </div>
           ) : (
@@ -104,7 +105,7 @@ export function ConversationList({ onSelectConversation, selectedConversationId,
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={getAvatarUrl(otherParticipant?.profilePictureUrl)} className="object-cover" />
                           <AvatarFallback>
-                            <img src="/placeholder-user.jpg" alt={otherParticipant?.fullName || "User"} className="h-full w-full object-cover" />
+                            <img src="/placeholder-user.jpg" alt={otherParticipant?.fullName || "Người dùng"} className="h-full w-full object-cover" />
                           </AvatarFallback>
                         </Avatar>
                         {otherParticipant?.isOnline && (
@@ -117,7 +118,7 @@ export function ConversationList({ onSelectConversation, selectedConversationId,
                             <h4 className="font-semibold text-sm truncate">{otherParticipant?.fullName}</h4>
                             {otherParticipant?.role === UserRole.Shop && (
                               <Badge variant="secondary" className="text-xs">
-                                Shop
+                                Cửa hàng
                               </Badge>
                             )}
                             {otherParticipant?.role === UserRole.Intermediary && (
@@ -136,10 +137,10 @@ export function ConversationList({ onSelectConversation, selectedConversationId,
                           <p className="text-xs text-blue-600 mb-1">📋 {conversation.serviceInfo.serviceName}</p>
                         )}
                         <p className="text-sm text-muted-foreground truncate">
-                          {conversation.lastMessage?.content || (conversation.participants.length > 0 ? "No messages yet" : "Conversation created")}
+                          {conversation.lastMessage?.content || (conversation.participants.length > 0 ? "Chưa có tin nhắn" : "Đã tạo cuộc trò chuyện")}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {conversation.lastMessage && formatDistanceToNow(parseISO(conversation.lastMessageAt), { addSuffix: true })}
+                          {conversation.lastMessage && formatDistanceToNow(parseISO(conversation.lastMessageAt), { addSuffix: true, locale: vi })}
                         </p>
                       </div>
                     </div>

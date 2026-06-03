@@ -34,6 +34,22 @@ namespace PetSitter.WebApi.Controller
 
             try
             {
+                var paymentMethod = (checkoutRequest.PaymentMethod ?? "PayOS").Trim();
+                if (paymentMethod.Equals("COD", StringComparison.OrdinalIgnoreCase) ||
+                    paymentMethod.Equals("CashOnDelivery", StringComparison.OrdinalIgnoreCase) ||
+                    paymentMethod.Equals("ThanhToanKhiNhanHang", StringComparison.OrdinalIgnoreCase))
+                {
+                    var order = await _orderService.CreateCashOnDeliveryOrder(checkoutRequest, userId);
+                    return Ok(new
+                    {
+                        success = true,
+                        paymentMethod = "COD",
+                        orderId = order.OrderId,
+                        orderCode = order.OrderCode,
+                        message = "Đặt hàng thanh toán khi nhận hàng thành công."
+                    });
+                }
+
                 var paymentLinkInfo = await _orderService.CreateOrderAndInitiatePayment(checkoutRequest, userId);
                 if (paymentLinkInfo == null || string.IsNullOrEmpty(paymentLinkInfo.checkoutUrl))
                 {

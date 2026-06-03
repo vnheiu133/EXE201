@@ -67,10 +67,10 @@ export default function ChatPageContent() {
     const initializePage = async () => {
       setIsLoading(true)
       try {
-        const res = await fetch("http://localhost:5278/api/chat/conversations", {
+        const res = await fetch("/api/chat/conversations", {
           headers: { Authorization: `Bearer ${token}` },
         })
-        if (!res.ok) throw new Error("Failed to fetch conversations")
+        if (!res.ok) throw new Error("Không tải được cuộc trò chuyện")
 
         const data = await res.json()
         const fetched = transformApiDataToConversation(data || [], user.userId)
@@ -90,7 +90,7 @@ export default function ChatPageContent() {
 
           if (existing) selected = existing
           else {
-            const createRes = await fetch("http://localhost:5278/api/chat/conversations", {
+            const createRes = await fetch("/api/chat/conversations", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -98,7 +98,7 @@ export default function ChatPageContent() {
               },
               body: JSON.stringify({ shopId: newShopId }),
             })
-            if (!createRes.ok) throw new Error("Failed to create conversation")
+            if (!createRes.ok) throw new Error("Không tạo được cuộc trò chuyện")
 
             const newConv = await createRes.json()
             router.replace(`/chat?conversationId=${newConv.conversationId}`, { scroll: false })
@@ -108,7 +108,7 @@ export default function ChatPageContent() {
 
         if (selected) setSelectedConversation(selected)
       } catch (err) {
-        toast.error("Failed to load conversations")
+        toast.error("Không tải được cuộc trò chuyện")
       } finally {
         setIsLoading(false)
       }
@@ -127,9 +127,9 @@ export default function ChatPageContent() {
           <Card className="w-full max-w-md">
             <CardContent className="text-center py-8">
               <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Please log in</h2>
+              <h2 className="text-xl font-semibold mb-2">Vui lòng đăng nhập</h2>
               <p className="text-muted-foreground">
-                You need to be logged in to access your messages
+                Bạn cần đăng nhập để xem tin nhắn.
               </p>
             </CardContent>
           </Card>
@@ -145,9 +145,9 @@ export default function ChatPageContent() {
       <main className="flex-1 flex flex-col pt-8 overflow-hidden">
         <div className="container mx-auto px-4 flex flex-col flex-1">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Messages</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Tin nhắn</h1>
             <p className="text-muted-foreground">
-              Connect with pet care providers and discuss your pet's needs
+              Kết nối với nhà cung cấp dịch vụ và trao đổi nhu cầu chăm sóc thú cưng.
             </p>
           </div>
 
@@ -181,10 +181,10 @@ export default function ChatPageContent() {
                       <Heart className="h-8 w-8 text-blue-600" />
                     </div>
                     <h3 className="text-xl font-semibold mb-2">
-                      Select a conversation
+                      Chọn một cuộc trò chuyện
                     </h3>
                     <p className="text-muted-foreground">
-                      Choose a conversation from the list to start chatting
+                      Chọn cuộc trò chuyện trong danh sách để bắt đầu nhắn tin.
                     </p>
                   </CardContent>
                 </Card>

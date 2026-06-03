@@ -12,14 +12,14 @@ namespace PetSitter.Models.DTO
         [Required]
         public string FullName { get; set; }
 
-        [Required]
-        [Phone]
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
 
         [Required]
         public string ShippingAddress { get; set; }
 
         [Required]
         public List<CartItemDto> CartItems { get; set; }
+
+        public string PaymentMethod { get; set; } = "PayOS";
     }
 }

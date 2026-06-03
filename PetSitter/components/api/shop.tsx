@@ -6,7 +6,7 @@ export const getShopByUserId = async (
 ): Promise<ApiResponse<any>> => {
     try {
         const response = await fetch(
-            `http://localhost:5278/api/shop/${userId}/shop`,
+            `/api/shop/${userId}/shop`,
             {
                 method: "GET",
                 headers: {
@@ -15,13 +15,13 @@ export const getShopByUserId = async (
             }
         );
         if (!response.ok) {
-            throw new Error("Failed to fetch shop data");
+            throw new Error("Không tải được dữ liệu cửa hàng");
         }
         return await response.json();
     } catch (error) {
         return {
             success: false,
-            message: "Failed to fetch shop data",
+            message: "Không tải được dữ liệu cửa hàng",
             data: null,
         };
     }
@@ -29,14 +29,14 @@ export const getShopByUserId = async (
 
 export const getProductsByShopId = async (shopId: string): Promise<ApiResponse<Product[]>> => {
     try {
-        const response = await fetch(`http://localhost:5278/api/shop/${shopId}/products`, {
+        const response = await fetch(`/api/shop/${shopId}/products`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
             },
         });
         if (!response.ok) {
-            throw new Error("Failed to fetch products");
+            throw new Error("Không tải được danh sách sản phẩm");
         }
         const result = await response.json();
         const shop = result.data;
@@ -73,7 +73,7 @@ export const getProductsByShopId = async (shopId: string): Promise<ApiResponse<P
     } catch (error) {
         return {
             success: false,
-            message: "Failed to fetch products",
+            message: "Không tải được danh sách sản phẩm",
             data: null,
         };
     }
@@ -85,7 +85,7 @@ export const getProductCountByShopId = async (
 ): Promise<ApiResponse<number>> => {
     try {
         const response = await fetch(
-            `http://localhost:5278/api/shop/${shopId}/products/count`,
+            `/api/shop/${shopId}/products/count`,
             {
                 method: "GET",
                 headers: {
@@ -94,13 +94,13 @@ export const getProductCountByShopId = async (
             }
         );
         if (!response.ok) {
-            throw new Error("Failed to fetch product count");
+            throw new Error("Không tải được số lượng sản phẩm");
         }
         return await response.json();
     } catch (error) {
         return {
             success: false,
-            message: "Failed to fetch product count",
+            message: "Không tải được số lượng sản phẩm",
             data: 0,
         };
     }
@@ -111,7 +111,7 @@ export const getOrderCountByShopId = async (
 ): Promise<ApiResponse<number>> => {
     try {
         const response = await fetch(
-            `http://localhost:5278/api/shop/${shopId}/orders/count`,
+            `/api/shop/${shopId}/orders/count`,
             {
                 method: "GET",
                 headers: {
@@ -120,13 +120,13 @@ export const getOrderCountByShopId = async (
             }
         );
         if (!response.ok) {
-            throw new Error("Failed to fetch order count");
+            throw new Error("Không tải được số lượng đơn hàng");
         }
         return await response.json();
     } catch (error) {
         return {
             success: false,
-            message: "Failed to fetch order count",
+            message: "Không tải được số lượng đơn hàng",
             data: 0,
         };
     }
@@ -138,14 +138,14 @@ export const addProduct = async (
 ): Promise<ApiResponse<Product>> => {
     try {
         const response = await fetch(
-            `http://localhost:5278/api/shop/${shopId}/products`,
+            `/api/shop/${shopId}/products`,
             {
                 method: "POST",
                 body: product,
             }
         );
         if (!response.ok) {
-            throw new Error("Failed to add product");
+            throw new Error("Thêm sản phẩm thất bại");
         }
         const result = await response.json();
         if (result.success && result.data) {
@@ -157,8 +157,8 @@ export const addProduct = async (
                     productName: result.data.productName,
                     price: result.data.price,
                     productImageUrl: result.data.productImageUrl,
-                    categoryName: result.data.category?.categoryName || "N/A",
-                    brandName: result.data.brand?.brandName || "N/A",
+                    categoryName: result.data.category?.categoryName || "Chưa có",
+                    brandName: result.data.brand?.brandName || "Chưa có",
                     tags: result.data.tags || [],
                     description: result.data.description || "",
                     availabilityStatus: result.data.stockQuantity > 0,
@@ -177,7 +177,7 @@ export const addProduct = async (
     } catch (error) {
         return {
             success: false,
-            message: "Failed to add product",
+            message: "Thêm sản phẩm thất bại",
             data: null,
         };
     }
@@ -190,14 +190,14 @@ export const updateProduct = async (
 ): Promise<ApiResponse<Product>> => {
     try {
         const response = await fetch(
-            `http://localhost:5278/api/shop/${shopId}/products/${productId}`,
+            `/api/shop/${shopId}/products/${productId}`,
             {
                 method: "PUT",
                 body: product,
             }
         );
         if (!response.ok) {
-            throw new Error("Failed to update product");
+            throw new Error("Cập nhật sản phẩm thất bại");
         }
         const result = await response.json();
         if (result.success && result.data) {
@@ -209,8 +209,8 @@ export const updateProduct = async (
                     productName: result.data.productName,
                     price: result.data.price,
                     productImageUrl: result.data.productImageUrl,
-                    categoryName: result.data.category?.categoryName || "N/A",
-                    brandName: result.data.brand?.brandName || "N/A",
+                    categoryName: result.data.category?.categoryName || "Chưa có",
+                    brandName: result.data.brand?.brandName || "Chưa có",
                     tags: result.data.tags || [],
                     description: result.data.description || "",
                     availabilityStatus: result.data.stockQuantity > 0,
@@ -229,7 +229,7 @@ export const updateProduct = async (
     } catch (error) {
         return {
             success: false,
-            message: "Failed to update product",
+            message: "Cập nhật sản phẩm thất bại",
             data: null,
         };
     }
@@ -239,7 +239,7 @@ export const updateProduct = async (
 export const getProductTags = async (): Promise<ApiResponse<any[]>> => {
     try {
         const response = await fetch(
-            `http://localhost:5278/api/filter/product-tags`,
+            `/api/filter/product-tags`,
             {
                 method: "GET",
                 headers: {
@@ -249,7 +249,7 @@ export const getProductTags = async (): Promise<ApiResponse<any[]>> => {
             }
         );
         if (!response.ok) {
-            throw new Error("Failed to fetch product tags");
+            throw new Error("Không tải được thẻ sản phẩm");
         }
         const result = await response.json();
         return {
@@ -260,7 +260,7 @@ export const getProductTags = async (): Promise<ApiResponse<any[]>> => {
     } catch (error) {
         return {
             success: false,
-            message: "Failed to fetch product tags",
+            message: "Không tải được thẻ sản phẩm",
             data: [],
         };
     }
@@ -270,7 +270,7 @@ export const getProductTags = async (): Promise<ApiResponse<any[]>> => {
 export const getProductBrands = async (): Promise<ApiResponse<any[]>> => {
     try {
         const response = await fetch(
-            `http://localhost:5278/api/filter/product-brands`,
+            `/api/filter/product-brands`,
             {
                 method: "GET",
                 headers: {
@@ -280,7 +280,7 @@ export const getProductBrands = async (): Promise<ApiResponse<any[]>> => {
             }
         );
         if (!response.ok) {
-            throw new Error("Failed to fetch product brands");
+            throw new Error("Không tải được thương hiệu sản phẩm");
         }
         const result = await response.json();
         return {
@@ -291,7 +291,7 @@ export const getProductBrands = async (): Promise<ApiResponse<any[]>> => {
     } catch (error) {
         return {
             success: false,
-            message: "Failed to fetch product brands",
+            message: "Không tải được thương hiệu sản phẩm",
             data: [],
         };
     }
@@ -301,7 +301,7 @@ export const getProductBrands = async (): Promise<ApiResponse<any[]>> => {
 export const getProductCategories = async (): Promise<ApiResponse<any[]>> => {
     try {
         const response = await fetch(
-            `http://localhost:5278/api/filter/product-categories`,
+            `/api/filter/product-categories`,
             {
                 method: "GET",
                 headers: {
@@ -311,7 +311,7 @@ export const getProductCategories = async (): Promise<ApiResponse<any[]>> => {
             }
         );
         if (!response.ok) {
-            throw new Error("Failed to fetch product categories");
+            throw new Error("Không tải được danh mục sản phẩm");
         }
         const result = await response.json();
         return {
@@ -322,13 +322,13 @@ export const getProductCategories = async (): Promise<ApiResponse<any[]>> => {
     } catch (error) {
         return {
             success: false,
-            message: "Failed to fetch product categories",
+            message: "Không tải được danh mục sản phẩm",
             data: [],
         };
     }
 };
 
-const API_BASE = "http://localhost:5278/api/shop";
+const API_BASE = "/api/shop";
 
 export async function getShopRevenue(shopId: string) {
     const res = await fetch(`${API_BASE}/${shopId}/orders/revenue`, {
@@ -355,7 +355,7 @@ export async function updateShopImage(shopId: string, shopImageUrl: string): Pro
 
     const result = await res.json();
     if (!res.ok) {
-        throw new Error(result.message || "Failed to update shop image");
+        throw new Error(result.message || "Cập nhật ảnh cửa hàng thất bại");
     }
 
     return result;

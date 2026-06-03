@@ -14,6 +14,7 @@ import {useChat} from "@/contexts/chat-context"
 import type { Message, Conversation } from "@/types/chat"
 import { UserRole } from "@/enum/UserRole"
 import { formatDistanceToNow, parseISO } from "date-fns"
+import { vi } from "date-fns/locale"
 
 interface ChatWindowProps {
   conversation: Conversation
@@ -47,10 +48,10 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
     if (!token || !conversation.conversationId) return;
       setIsLoading(true);
         // 1. Fetch message history
-        fetch(`http://localhost:5278/api/chat/conversations/${conversation.conversationId}/messages`, {
+        fetch(`/api/chat/conversations/${conversation.conversationId}/messages`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then(res => res.ok ? res.json() : Promise.reject(new Error("Failed to fetch history")))
+        .then(res => res.ok ? res.json() : Promise.reject(new Error("Không tải được lịch sử tin nhắn")))
     .then(data => setMessages(data || []))
     // CUỘN XUỐNG CUỐI NGAY SAU KHI TẢI LỊCH SỬ
     .then(() => {
@@ -156,7 +157,7 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
           <Avatar className="h-10 w-10">
             <AvatarImage src={getAvatarUrl(otherParticipant?.profilePictureUrl)} className="object-cover" />
             <AvatarFallback>
-              <img src="/placeholder-user.jpg" alt={otherParticipant?.fullName || "User"} className="h-full w-full object-cover" />
+              <img src="/placeholder-user.jpg" alt={otherParticipant?.fullName || "Người dùng"} className="h-full w-full object-cover" />
             </AvatarFallback>
           </Avatar>
           <div>
@@ -165,7 +166,7 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
               {otherParticipant?.role === UserRole.Shop && (
                 <Badge variant="secondary" className="text-xs">
                   <Star className="h-3 w-3 mr-1" />
-                  Shop
+                  Cửa hàng
                 </Badge>
               )}
               {otherParticipant?.role === UserRole.Intermediary && (
@@ -179,10 +180,10 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
               {otherParticipant?.isOnline ? (
                 <span className="flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                  Online
+                  Đang online
                 </span>
               ) : (
-                "Offline"
+                "Đang offline"
               )}
             </p>
           </div>
@@ -207,7 +208,7 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
             <div className="flex items-center space-x-2">
               <Heart className="h-4 w-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-900">
-                Discussing: {conversation.serviceInfo.serviceName}
+                Đang trao đổi: {conversation.serviceInfo.serviceName}
               </span>
             </div>
             <Badge variant="outline" className="text-xs">
@@ -226,8 +227,8 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Heart className="h-8 w-8 text-blue-600" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Start the conversation!</h3>
-                <p className="text-muted-foreground text-sm">Say hello and discuss your pet care needs</p>
+                <h3 className="font-semibold text-lg mb-2">Bắt đầu cuộc trò chuyện!</h3>
+                <p className="text-muted-foreground text-sm">Gửi lời chào và trao đổi nhu cầu chăm sóc thú cưng của bạn.</p>
               </div>
             ) : (
               messages.map((message) => {
@@ -241,7 +242,7 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={getAvatarUrl(message.senderAvatar)} className="object-cover" />
                           <AvatarFallback className="text-xs">
-                            <img src="/placeholder-user.jpg" alt={message.senderName || "User"} className="h-full w-full object-cover" />
+                            <img src="/placeholder-user.jpg" alt={message.senderName || "Người dùng"} className="h-full w-full object-cover" />
                           </AvatarFallback>
                         </Avatar>
                       )}
@@ -252,7 +253,7 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
                       >
                         <p className="text-sm">{message.content}</p>
                         <p className={`text-xs mt-1 ${isOwn ? "text-blue-100" : "text-gray-500"}`}>
-                          {message.sentAt && formatDistanceToNow(parseISO(message.sentAt), { addSuffix: true })}
+                          {message.sentAt && formatDistanceToNow(parseISO(message.sentAt), { addSuffix: true, locale: vi })}
                         </p>
                       </div>
                     </div>
@@ -266,7 +267,7 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
                   <Avatar className="h-6 w-6">
                     <AvatarImage src={getAvatarUrl(otherParticipant?.profilePictureUrl)} className="object-cover" />
                     <AvatarFallback className="text-xs">
-                      <img src="/placeholder-user.jpg" alt={otherParticipant?.fullName || "User"} className="h-full w-full object-cover" />
+                      <img src="/placeholder-user.jpg" alt={otherParticipant?.fullName || "Người dùng"} className="h-full w-full object-cover" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="bg-gray-100 rounded-lg px-3 py-2">
@@ -296,7 +297,7 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
+            placeholder="Nhập tin nhắn..."
             className="flex-1"
           />
           <Button type="submit" disabled={!newMessage.trim()}>

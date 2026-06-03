@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import * as signalR from "@microsoft/signalr";
+import { hubUrl } from "@/lib/api-origin";
 import { useAuth } from "./auth-context";
 
 interface ChatContextType {
@@ -21,7 +22,7 @@ function decodeBase64Url(value: string) {
   return atob(padded);
 }
 
-function isUsableJwt(token: string | null) {
+function isUsableJwt(token: string | null): token is string {
   if (!token) return false;
 
   const parts = token.split(".");
@@ -46,10 +47,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const accessToken = token;
     let disposed = false;
     const nextConnection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5278/chathub", {
-        accessTokenFactory: () => token,
+      .withUrl(hubUrl(), {
+        accessTokenFactory: () => accessToken,
       })
       .withAutomaticReconnect()
       .build();

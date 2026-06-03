@@ -26,7 +26,7 @@ export function ContactChatButton({ shopOwnerId, shopName, className }: ContactC
     setLoading(true)
     try {
       // Create or get existing conversation
-      const response = await fetch("http://localhost:5278/api/chat/conversations", {
+      const response = await fetch("/api/chat/conversations", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -34,7 +34,7 @@ export function ContactChatButton({ shopOwnerId, shopName, className }: ContactC
         },
         body: JSON.stringify({
           participantId: shopOwnerId,
-          initialMessage: `Hi! I'm interested in your pet care services.`,
+          initialMessage: "Xin chào! Tôi muốn tìm hiểu thêm về dịch vụ chăm sóc thú cưng của cửa hàng.",
         }),
       })
 
@@ -55,7 +55,7 @@ export function ContactChatButton({ shopOwnerId, shopName, className }: ContactC
       className={`bg-purple-500 hover:bg-purple-600 text-white ${className}`}
     >
       <MessageCircle className="h-4 w-4 mr-2" />
-      {loading ? "Starting..." : "Contact"}
+      {loading ? "Đang mở..." : "Liên hệ"}
     </Button>
   )
 }

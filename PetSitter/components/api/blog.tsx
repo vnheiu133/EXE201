@@ -9,7 +9,7 @@ function normalizeBlogDetail(data: any): BlogDetailDTO {
     blogId: data?.blogId || "",
     title: data?.title || "Bài viết PetSitter",
     content: data?.content || data?.description || data?.summary || "",
-    tagName: data?.tagName || tag?.blogTagName || data?.categoryId || "Pet care",
+    tagName: data?.tagName || tag?.blogTagName || data?.categoryId || "Chăm sóc thú cưng",
     readTimeMinutes: data?.readTimeMinutes || 3,
     viewCount: data?.viewCount || 0,
     likeCount: data?.likeCount || 0,
@@ -87,7 +87,7 @@ function getCurrentUser() {
 
 export async function getAllBlogs(): Promise<Blog[]> {
   try {
-    const res = await fetch("http://localhost:5278/api/blog/getallblogs", {
+    const res = await fetch("/api/blog/getallblogs", {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -104,7 +104,7 @@ export async function getAllBlogs(): Promise<Blog[]> {
 
 export async function getBlogTags(): Promise<BlogTag[]> {
   try {
-    const res = await fetch("http://localhost:5278/api/filter/blog-tags", {
+    const res = await fetch("/api/filter/blog-tags", {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -123,7 +123,7 @@ export async function getBlogById(blogId: string): Promise<BlogDetailDTO> {
   const userId = user?.userId ?? "00000000-0000-0000-0000-000000000000";
 
   const res = await fetch(
-    `http://localhost:5278/api/blog/getblogbyid/${blogId}?userId=${userId}`,
+    `/api/blog/getblogbyid/${blogId}?userId=${userId}`,
     {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -131,7 +131,7 @@ export async function getBlogById(blogId: string): Promise<BlogDetailDTO> {
   );
 
   if (!res.ok) {
-    throw new Error("Failed to fetch blog details");
+    throw new Error("Không tải được chi tiết bài viết");
   }
 
   const result = await res.json();
@@ -139,14 +139,14 @@ export async function getBlogById(blogId: string): Promise<BlogDetailDTO> {
 }
 
 export async function increaseView(blogId: string): Promise<Blog> {
-  const res = await fetch(`http://localhost:5278/api/blog/increaseview/${blogId}`, {
+  const res = await fetch(`/api/blog/increaseview/${blogId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
   });
 
   if (!res.ok) {
     const errorText = await res.text();
-    throw new Error(`Failed to increase view count: ${errorText}`);
+    throw new Error(`Không tăng được lượt xem: ${errorText}`);
   }
 
   const result = await res.json();
@@ -155,10 +155,10 @@ export async function increaseView(blogId: string): Promise<Blog> {
 
 export async function toggleLike(blogId: string): Promise<{ likeCount: number; hasLiked: boolean }> {
   const user = getCurrentUser();
-  if (!user) throw new Error("User not found in localStorage");
+  if (!user) throw new Error("Không tìm thấy người dùng trong bộ nhớ trình duyệt");
 
   const res = await fetch(
-    `http://localhost:5278/api/blog/togglelike/${blogId}?userId=${user.userId}`,
+    `/api/blog/togglelike/${blogId}?userId=${user.userId}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -166,7 +166,7 @@ export async function toggleLike(blogId: string): Promise<{ likeCount: number; h
   );
 
   if (!res.ok) {
-    throw new Error("Failed to toggle like");
+    throw new Error("Không cập nhật được lượt thích");
   }
 
   const result = await res.json();
@@ -178,7 +178,7 @@ export async function hasUserLiked(blogId: string): Promise<boolean> {
   if (!user) return false;
 
   const res = await fetch(
-    `http://localhost:5278/api/blog/hasuserliked/${blogId}?userId=${user.userId}`,
+    `/api/blog/hasuserliked/${blogId}?userId=${user.userId}`,
     {
       method: "GET",
       headers: { "Content-Type": "application/json" },
@@ -186,7 +186,7 @@ export async function hasUserLiked(blogId: string): Promise<boolean> {
   );
 
   if (!res.ok) {
-    throw new Error("Failed to check if user liked");
+    throw new Error("Không kiểm tra được trạng thái yêu thích");
   }
 
   const result = await res.json();
@@ -194,23 +194,23 @@ export async function hasUserLiked(blogId: string): Promise<boolean> {
 }
 
 export async function createBlog(authorId: string, formData: FormData) {
-  const res = await fetch(`http://localhost:5278/api/blog/${authorId}/create`, {
+  const res = await fetch(`/api/blog/${authorId}/create`, {
     method: "POST",
     body: formData,
   });
 
-  if (!res.ok) throw new Error("Create blog failed");
+  if (!res.ok) throw new Error("Tạo bài viết thất bại");
   return await res.json();
 }
 
 export async function getBlogCategories(): Promise<{ categoryId: string; categoryName: string }[]> {
-  const res = await fetch("http://localhost:5278/api/filter/blog-categories", {
+  const res = await fetch("/api/filter/blog-categories", {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
 
   if (!res.ok) {
-    throw new Error("Failed to fetch blog categories");
+    throw new Error("Không tải được danh mục bài viết");
   }
 
   const result = await res.json();

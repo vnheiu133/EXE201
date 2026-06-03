@@ -51,7 +51,7 @@ export function Navigation() {
   return (
     <nav className="sticky top-0 z-50 border-b border-[#d9e4dd]/40 bg-[#f7f8f3]/80 backdrop-blur-md shadow-[0_2px_20px_-4px_rgba(22,49,42,0.05)] transition-all duration-300">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="group flex min-w-0 items-center gap-3" aria-label="PetSitter home">
+        <Link href="/" className="group flex min-w-0 items-center gap-3" aria-label="Trang chủ PetSitter">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-[#e15c45] to-[#f47f68] text-white shadow-[0_4px_12px_rgba(225,92,69,0.25)] transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_4px_18px_rgba(225,92,69,0.35)]">
             <PawPrint className="size-5 transition-transform duration-300 group-hover:rotate-12" />
           </span>
@@ -85,7 +85,7 @@ export function Navigation() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open navigation">
+              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Mở điều hướng">
                 <Menu className="size-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -127,7 +127,7 @@ export function Navigation() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="ghost" size="icon" asChild aria-label="Cart" className="relative hidden hover:bg-[#16312a]/5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 sm:inline-flex">
+          <Button variant="ghost" size="icon" asChild aria-label="Giỏ hàng" className="relative hidden hover:bg-[#16312a]/5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 sm:inline-flex">
             <Link href="/cart">
               <ShoppingCart className="size-5" />
               {cartCount > 0 && (
@@ -141,7 +141,7 @@ export function Navigation() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative size-10 rounded-full px-0 ring-2 ring-[#1f6654]/10 hover:ring-[#1f6654] transition-all duration-300" aria-label="Account menu">
+                <Button variant="ghost" className="relative size-10 rounded-full px-0 ring-2 ring-[#1f6654]/10 hover:ring-[#1f6654] transition-all duration-300" aria-label="Menu tài khoản">
                   <Avatar className="size-8">
                     <AvatarImage src={getAvatarUrl(user.profilePictureUrl)} alt={user.fullName} className="object-cover" />
                     <AvatarFallback>
@@ -179,7 +179,7 @@ export function Navigation() {
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard">
                         <Settings className="mr-2 size-4" />
-                        Bảng điều khiển Shop
+                        Bảng điều khiển cửa hàng
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>

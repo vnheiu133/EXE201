@@ -1,11 +1,12 @@
 import * as signalR from "@microsoft/signalr"
+import { hubUrl } from "@/lib/api-origin"
 
 export default class ChatService {
   private connection: signalR.HubConnection
 
   constructor(token: string) {
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl("http://localhost:5278/chatHub", {
+      .withUrl(hubUrl(), {
         accessTokenFactory: () => token,
       })
       .withAutomaticReconnect()

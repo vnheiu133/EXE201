@@ -7,7 +7,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr_0.8fr_1fr]">
           <div className="max-w-sm">
-            <Link href="/" className="inline-flex items-center gap-3" aria-label="PetSitter home">
+            <Link href="/" className="inline-flex items-center gap-3" aria-label="Trang chủ PetSitter">
               <span className="flex size-11 items-center justify-center rounded-md bg-[#e15c45] text-white">
                 <PawPrint className="size-5" />
               </span>

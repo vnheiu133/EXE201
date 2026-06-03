@@ -2,10 +2,10 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { AlertCircle, ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
+import { AlertCircle, ArrowRight, Chrome, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
 
 import { AuthShell } from "@/components/auth/auth-shell"
 import { Button } from "@/components/ui/button"
@@ -13,13 +13,95 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/contexts/auth-context"
 
+const GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+  "1072689631714-n3g2r18i61723an44a4p84kkied06qf5.apps.googleusercontent.com"
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string
+            callback: (response: { credential?: string }) => void
+          }) => void
+          renderButton: (
+            parent: HTMLElement,
+            options: {
+              theme?: "outline" | "filled_blue" | "filled_black"
+              size?: "large" | "medium" | "small"
+              text?: "signin_with" | "signup_with" | "continue_with" | "signin"
+              shape?: "rectangular" | "pill" | "circle" | "square"
+              width?: number
+            },
+          ) => void
+        }
+      }
+    }
+  }
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
-  const { login, loading } = useAuth()
+  const googleButtonRef = useRef<HTMLDivElement | null>(null)
+  const { login, loginWithGoogle, loading } = useAuth()
   const router = useRouter()
+  const googleRedirectUri =
+    typeof window === "undefined" ? "http://localhost:5100/signin-google" : `${window.location.origin}/signin-google`
+
+  useEffect(() => {
+    const handleCredential = async (response: { credential?: string }) => {
+      setError("")
+
+      try {
+        if (!response.credential) {
+          throw new Error("Thiếu mã xác thực Google")
+        }
+
+        await loginWithGoogle(response.credential)
+        router.push("/")
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Đăng nhập Google thất bại")
+      }
+    }
+
+    const renderGoogleButton = () => {
+      if (!window.google || !googleButtonRef.current) return
+
+      googleButtonRef.current.innerHTML = ""
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredential,
+      })
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: 360,
+      })
+    }
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      'script[src="https://accounts.google.com/gsi/client?hl=vi"]',
+    )
+
+    if (existingScript) {
+      renderGoogleButton()
+      return
+    }
+
+    const script = document.createElement("script")
+    script.src = "https://accounts.google.com/gsi/client?hl=vi"
+    script.async = true
+    script.defer = true
+    script.onload = renderGoogleButton
+    document.head.appendChild(script)
+  }, [loginWithGoogle, router])
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -31,6 +113,18 @@ export default function LoginPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Email hoặc mật khẩu không chính xác")
     }
+  }
+
+  const handleGoogleRedirect = () => {
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: googleRedirectUri,
+      response_type: "code",
+      scope: "openid email profile",
+      prompt: "select_account",
+    })
+
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
   }
 
   return (
@@ -102,6 +196,26 @@ export default function LoginPage() {
           {!loading && <ArrowRight className="size-4" />}
         </Button>
       </form>
+
+      <div className="my-6 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-[#789088]">
+        <span className="h-px flex-1 bg-[#d8e2de]" />
+        <span>hoặc</span>
+        <span className="h-px flex-1 bg-[#d8e2de]" />
+      </div>
+
+      <div className="space-y-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="h-11 w-full border-[#c9d7d0] bg-white text-[#16312a] shadow-none hover:bg-[#f7fbf8]"
+          onClick={handleGoogleRedirect}
+        >
+          <Chrome className="size-4 text-[#b44735]" />
+          Đăng nhập bằng Google
+        </Button>
+        <div className="sr-only" ref={googleButtonRef} />
+      </div>
 
       <p className="mt-6 text-sm text-[#526761]">
         Bạn mới sử dụng PetSitter?{" "}

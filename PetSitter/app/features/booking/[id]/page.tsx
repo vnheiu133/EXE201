@@ -35,7 +35,7 @@ function WriteReviewDialog({ serviceId, onReviewAdded }: { serviceId: string, on
     if (!user) return alert("Vui lòng đăng nhập trước")
     setLoading(true)
     try {
-      const res = await fetch("http://localhost:5278/api/service/write-review", {
+      const res = await fetch("/api/service/write-review", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,15 +117,15 @@ export default function BookingPage() {
     const fetchServiceDetail = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:5278/api/service/service/${serviceId}`, {
+        const res = await fetch(`/api/service/service/${serviceId}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
-        if (!res.ok) throw new Error("Failed to fetch service details");
+        if (!res.ok) throw new Error("Không tải được chi tiết dịch vụ");
         const result = await res.json();
         setService(result.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
       } finally {
         setLoading(false);
       }
@@ -205,7 +205,7 @@ const handleContact = () => {
               <div className="flex items-start gap-4">
                 <Image
                   src={getAvatarUrl(service.shop?.shopImageUrl, DEFAULT_SHOP_AVATAR)}
-                  alt={service.shop?.shopName || "Shop"}
+                  alt={service.shop?.shopName || "Cửa hàng"}
                   width={80}
                   height={80}
                   className="rounded-full object-cover bg-gray-200"
@@ -232,7 +232,7 @@ const handleContact = () => {
                   <div className="relative w-full h-96">
                     <Image
                       src={serviceImageUrl}
-                      alt={`${service.serviceName} photo`}
+                      alt={`Ảnh dịch vụ ${service.serviceName}`}
                       fill
                       className="object-cover transition-transform duration-300 hover:scale-105 rounded-lg"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -275,7 +275,7 @@ const handleContact = () => {
                     <div key={review.reviewId} className="flex gap-4">
                       <Image
                         src={getAvatarUrl(review.users?.profilePictureUrl)}
-                        alt={review.users?.fullName || "User"}
+                        alt={review.users?.fullName || "Người dùng"}
                         width={40}
                         height={40}
                         className="rounded-full object-cover bg-gray-200"

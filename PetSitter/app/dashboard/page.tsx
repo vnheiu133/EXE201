@@ -104,7 +104,7 @@ export default function DashboardPage() {
       try {
         const shopRes = await getShopByUserId(user.userId);
         if (!shopRes.success || !shopRes.data) {
-          throw new Error("Failed to load shop");
+          throw new Error("Không tải được thông tin cửa hàng");
         }
         const sid = shopRes.data.shopId;
         if (!mounted) return;
@@ -141,7 +141,7 @@ export default function DashboardPage() {
 
       } catch (err: any) {
         console.error(err);
-        if (mounted) setError(err.message || "Error fetching data");
+        if (mounted) setError(err.message || "Đã xảy ra lỗi khi tải dữ liệu");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -191,7 +191,7 @@ export default function DashboardPage() {
     // 4. Sắp xếp (Sort)
     switch (sortBy) {
       case "price_asc":
-        list.sort((a, b) => (a.price ?? 0) - (a.price ?? 0));
+        list.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
         break;
       case "price_desc":
         list.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
@@ -217,7 +217,7 @@ export default function DashboardPage() {
   const chartData = useMemo(() => {
     const map = new Map<string, number>();
     products.forEach((p) => {
-      const key = p.categoryName || "Uncategorized";
+      const key = p.categoryName || "Chưa phân loại";
       const stock = p.stockQuantity ?? 1;
       const value = (p.price ?? 0) * stock;
       map.set(key, (map.get(key) || 0) + value);
@@ -231,7 +231,7 @@ export default function DashboardPage() {
   }, []);
 
   const downloadCSV = useCallback(() => {
-    const header = ["Product ID", "Name", "Price", "Category", "Brand", "Tags", "Image", "Stock", "Rating", "Availability"];
+    const header = ["Mã sản phẩm", "Tên", "Giá", "Danh mục", "Thương hiệu", "Thẻ", "Ảnh", "Tồn kho", "Đánh giá", "Trạng thái"];
     const rows = products.map((p) => [
       p.productId,
       p.productName,
@@ -242,7 +242,7 @@ export default function DashboardPage() {
       p.productImageUrl ?? "",
       p.stockQuantity ?? 0,
       p.rating ?? 0,
-      p.availabilityStatus ? "available" : "out_of_stock",
+      p.availabilityStatus ? "còn_hàng" : "hết_hàng",
     ]);
 
     const csvContent = [header, ...rows]
@@ -293,7 +293,7 @@ export default function DashboardPage() {
   if (user?.role === UserRole.Intermediary) {
     return <IntermediaryDashboard />;
   }
-  if (loading) return <div className="flex h-screen items-center justify-center text-gray-600">Loading...</div>;
+  if (loading) return <div className="flex h-screen items-center justify-center text-gray-600">Đang tải...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
@@ -307,17 +307,17 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <StatCard 
-          title="Total Products"
+          title="Tổng sản phẩm"
           value={stats.totalProducts || products.length} 
           icon={<Package className="h-5 w-5 text-gray-500" />} 
         />
         <StatCard 
-          title="Revenue (est.)" 
+          title="Doanh thu"
           value={formatCurrency(stats.totalRevenue)} 
           icon={<DollarSign className="h-5 w-5 text-gray-500" />} 
         />
         <StatCard 
-          title="Total Sold"
+          title="Đã bán"
           value={stats.totalSold}
           icon={<ShoppingBag className="h-5 w-5 text-gray-500" />} 
         />
@@ -378,12 +378,12 @@ export default function DashboardPage() {
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="gap-2" onClick={() => handleOpenDialog()}>
-                    <Plus className="h-4 w-4" /> Add Product
+                    <Plus className="h-4 w-4" /> Thêm sản phẩm
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>{editing ? "Edit Product" : "Add New Product"}</DialogTitle>
+                    <DialogTitle>{editing ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}</DialogTitle>
                   </DialogHeader>
                   <ProductForm
                     editing={editing}
@@ -401,7 +401,7 @@ export default function DashboardPage() {
 
           {/* Product List */}
           {filteredProducts.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">No products found for your criteria.</div>
+            <div className="text-center text-gray-500 py-8">Không tìm thấy sản phẩm phù hợp.</div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredProducts.map((p) => (
@@ -450,18 +450,18 @@ const DashboardHeader = React.memo(({ onBack, onShowGuidelines, onExportCSV }: {
 }) => (
   <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
     <div>
-      <h1 className="text-3xl font-bold">Shop Dashboard</h1>
-      <p className="text-gray-500">Overview & product management — polished and intuitive</p>
+      <h1 className="text-3xl font-bold">Bảng điều khiển cửa hàng</h1>
+      <p className="text-gray-500">Tổng quan và quản lý sản phẩm</p>
     </div>
     <div className="flex items-center gap-3">
       <Button variant="ghost" onClick={onBack}>
-        <ArrowLeft className="h-4 w-4 mr-2" /> Back
+        <ArrowLeft className="h-4 w-4 mr-2" /> Quay lại
       </Button>
       <Button onClick={onShowGuidelines} variant="outline">
-        <Filter className="mr-2 h-4 w-4" /> Field Guide
+        <Filter className="mr-2 h-4 w-4" /> Hướng dẫn nhập liệu
       </Button>
       <Button onClick={onExportCSV} variant="ghost">
-        <Download className="mr-2 h-4 w-4" /> Export CSV
+        <Download className="mr-2 h-4 w-4" /> Xuất CSV
       </Button>
     </div>
   </div>
@@ -499,18 +499,18 @@ const ProductToolbar = React.memo(({ search, onSearchChange, onSortChange }: {
   <div className="flex items-center gap-2 w-full max-w-md">
     <div className="relative w-full">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-      <Input placeholder="Search products or tags..." value={search} onChange={onSearchChange} className="pl-10" />
+      <Input placeholder="Tìm sản phẩm hoặc thẻ..." value={search} onChange={onSearchChange} className="pl-10" />
     </div>
     <Select onValueChange={onSortChange} defaultValue="latest">
       <SelectTrigger className="w-40">
-        <SelectValue placeholder="Sort by" />
+        <SelectValue placeholder="Sắp xếp" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="latest">Sort by: Latest</SelectItem>
-        <SelectItem value="name">Sort by: Name</SelectItem>
-        <SelectItem value="price_asc">Sort by: Price ↑</SelectItem>
-        <SelectItem value="price_desc">Sort by: Price ↓</SelectItem>
-        <SelectItem value="rating">Sort by: Rating</SelectItem>
+        <SelectItem value="latest">Mới nhất</SelectItem>
+        <SelectItem value="name">Theo tên</SelectItem>
+        <SelectItem value="price_asc">Giá tăng dần</SelectItem>
+        <SelectItem value="price_desc">Giá giảm dần</SelectItem>
+        <SelectItem value="rating">Đánh giá cao</SelectItem>
       </SelectContent>
     </Select>
   </div>
@@ -539,7 +539,7 @@ const ProductItemCard = React.memo(({ product: p, formatCurrency, onEdit, onDele
       <div className="flex justify-between items-start mb-2">
         <div className="w-2/3 pr-2">
           <h3 className="font-semibold line-clamp-2 text-sm" title={p.productName}>{p.productName}</h3>
-          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{p.description || "No description"}</p>
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{p.description || "Chưa có mô tả"}</p>
         </div>
         <div className="text-right flex-shrink-0">
           <p className="text-orange-600 font-bold text-sm mt-1">{formatCurrency(p.price)}</p>
@@ -553,11 +553,11 @@ const ProductItemCard = React.memo(({ product: p, formatCurrency, onEdit, onDele
           <span className="text-xs text-gray-400">({p.reviews?.length ?? 0})</span>
         </div>
         {p.availabilityStatus ? (
-          <Badge variant="default" className="text-xs px-2 py-0.5">Available</Badge>
+          <Badge variant="default" className="text-xs px-2 py-0.5">Còn hàng</Badge>
         ) : (
-          <Badge variant="destructive" className="text-xs px-2 py-0.5">Out of stock</Badge>
+          <Badge variant="destructive" className="text-xs px-2 py-0.5">Hết hàng</Badge>
         )}
-        <div className="text-xs text-gray-500 ml-auto">Stock: {p.stockQuantity ?? "-"}</div>
+        <div className="text-xs text-gray-500 ml-auto">Tồn kho: {p.stockQuantity ?? "-"}</div>
       </div>
 
       <div className="flex flex-wrap gap-1 mt-3 border-t pt-3">
@@ -604,18 +604,18 @@ const DashboardSidebar = React.memo(({
     {/* Card Chart (giữ nguyên) */}
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Inventory Value by Category (k ₫)</CardTitle>
+        <CardTitle className="text-base">Giá trị tồn kho theo danh mục (nghìn đồng)</CardTitle>
       </CardHeader>
       <CardContent style={{ height: 220 }}>
         {chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500 text-sm">Not enough data</div>
+          <div className="flex items-center justify-center h-full text-gray-500 text-sm">Chưa đủ dữ liệu</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <XAxis dataKey="category" hide />
               <YAxis stroke="#888" fontSize={12} />
               <Tooltip 
-                formatter={(value: number) => [`${value.toLocaleString()}k ₫`, "Value"]}
+                formatter={(value: number) => [`${value.toLocaleString()} nghìn đồng`, "Giá trị"]}
                 cursor={{ fill: 'transparent' }} 
               />
               <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]} />
@@ -628,7 +628,7 @@ const DashboardSidebar = React.memo(({
    {/* Card Quick Filters (cập nhật) */}
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Quick Filters</CardTitle>
+        <CardTitle className="text-base">Bộ lọc nhanh</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-2">
@@ -642,7 +642,7 @@ const DashboardSidebar = React.memo(({
               }
             `} 
             onClick={() => onQuickFilterChange('available')}>
-            Available Products
+            Sản phẩm còn hàng
           </Button>
           <Button 
             variant="ghost"
@@ -654,7 +654,7 @@ const DashboardSidebar = React.memo(({
               }
             `} 
             onClick={() => onQuickFilterChange('low_stock')}>
-            Low Stock (≤5)
+            Sắp hết hàng (≤5)
           </Button>
           <Button 
             variant="ghost"
@@ -666,7 +666,7 @@ const DashboardSidebar = React.memo(({
               }
             `} 
             onClick={() => onQuickFilterChange('price_gt_500k')}>
-            Price &gt; 500k
+            Giá &gt; 500k
           </Button>
           <Button 
             variant="ghost"
@@ -678,7 +678,7 @@ const DashboardSidebar = React.memo(({
               }
             `} 
             onClick={() => onQuickFilterChange('all')}>
-            Show All Products
+            Hiển thị tất cả sản phẩm
           </Button>
         </div>
       </CardContent>
@@ -687,7 +687,7 @@ const DashboardSidebar = React.memo(({
     {/* Card Brands (cập nhật) */}
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Filter by Brand</CardTitle>
+        <CardTitle className="text-base">Lọc theo thương hiệu</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2">
@@ -702,7 +702,7 @@ const DashboardSidebar = React.memo(({
               {b.brandName}
             </Badge>
           )) : (
-            <p className="text-sm text-gray-500">No brands found.</p>
+            <p className="text-sm text-gray-500">Chưa có thương hiệu.</p>
           )}
         </div>
       </CardContent>
@@ -721,22 +721,22 @@ const FieldGuideDialog = React.memo(({ open, onOpenChange }: {
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Product Field Guide</DialogTitle>
+        <DialogTitle>Hướng dẫn nhập thông tin sản phẩm</DialogTitle>
       </DialogHeader>
       <div className="space-y-3 py-2 text-sm">
-        <p className="text-gray-600">Guidance for sellers on how to fill product information correctly.</p>
+        <p className="text-gray-600">Gợi ý giúp người bán nhập thông tin sản phẩm chính xác hơn.</p>
         <ul className="list-disc pl-5 space-y-1.5 text-gray-700">
-          <li><strong>Name</strong>: Keep it short & descriptive. Include brand/model (e.g., "iPhone 15 Pro Max 256GB").</li>
-          <li><strong>Price</strong>: Enter the number in VND (e.g., 129000).</li>
-          <li><strong>Category / Brand</strong>: Pick the closest match for filtering and search.</li>
-          <li><strong>Images</strong>: Use clear, well-lit photos. Recommended: 800x800px or larger. The first image is the thumbnail.</li>
-          <li><strong>Description</strong>: A short summary (for cards) and optional long details (for the product page).</li>
-          <li><strong>Tags</strong>: Keywords to help search (e.g., "red", "leather", "size L").</li>
-          <li><strong>Stock</strong>: Total units available. Use 0 if out of stock.</li>
-          <li><strong>Availability</strong>: Toggle to show or hide the product from buyers.</li>
+          <li><strong>Tên</strong>: Ngắn gọn, dễ hiểu, có thể kèm thương hiệu hoặc mẫu sản phẩm.</li>
+          <li><strong>Giá</strong>: Nhập số tiền bằng VND, ví dụ 129000.</li>
+          <li><strong>Danh mục / thương hiệu</strong>: Chọn mục gần đúng nhất để khách dễ lọc và tìm kiếm.</li>
+          <li><strong>Hình ảnh</strong>: Dùng ảnh rõ, đủ sáng, khuyến nghị từ 800x800px.</li>
+          <li><strong>Mô tả</strong>: Tóm tắt ngắn gọn các thông tin quan trọng của sản phẩm.</li>
+          <li><strong>Thẻ</strong>: Từ khóa giúp tìm kiếm, ví dụ màu sắc, chất liệu hoặc kích cỡ.</li>
+          <li><strong>Tồn kho</strong>: Tổng số lượng còn bán. Nhập 0 nếu hết hàng.</li>
+          <li><strong>Trạng thái</strong>: Dùng để hiển thị hoặc ẩn sản phẩm với khách mua.</li>
         </ul>
         <div className="text-right pt-2">
-          <Button onClick={() => onOpenChange(false)}>Close</Button>
+          <Button onClick={() => onOpenChange(false)}>Đóng</Button>
         </div>
       </div>
     </DialogContent>

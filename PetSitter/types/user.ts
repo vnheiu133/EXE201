@@ -14,7 +14,7 @@ export interface User {
 export interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (idToken?: string) => Promise<any>;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
   loading: boolean;
