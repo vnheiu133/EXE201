@@ -14,6 +14,9 @@ namespace PetSitter.Models.DTO
         public Guid ShopId { get; set; }
         public string ShopName { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public string ShippingAddress { get; set; } = string.Empty;
         public ICollection<OrderItemDto> Items { get; set; }
 
     }

@@ -1,365 +1,450 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  CalendarCheck,
+  CheckCircle2,
+  MapPin,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  Star,
+  Store,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import { Footer } from "@/components/footer";
+import { Navigation } from "@/components/navigation";
+import { ServiceImage } from "@/components/service-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Phone, MessageCircle, ArrowLeft } from "lucide-react";
-import { Navigation } from "@/components/navigation";
-import { Footer } from "@/components/footer";
-import Image from "next/image";
-import Link from "next/link";
-import type { Service } from "@/types/feature"; // Đảm bảo import type từ types/feature.ts
-import { useAuth } from "@/contexts/auth-context";
-import { toast } from "sonner";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import router from "next/router";
+import { useAuth } from "@/contexts/auth-context";
 import { DEFAULT_SHOP_AVATAR, getAvatarUrl } from "@/lib/avatar";
+import type { Service } from "@/types/feature";
 
-function WriteReviewDialog({ serviceId, onReviewAdded }: { serviceId: string, onReviewAdded: (review: any) => void }) {
-  const [open, setOpen] = useState(false)
-  const [rating, setRating] = useState(0)
-  const [comment, setComment] = useState("")
-  const [loading, setLoading] = useState(false)
-  const { user } = useAuth()
+function RatingStars({ value, size = "size-4" }: { value: number; size?: string }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`${size} ${star <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-slate-200"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function WriteReviewDialog({ serviceId, onReviewAdded }: { serviceId: string; onReviewAdded: (review: any) => void }) {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!user) return alert("Vui lòng đăng nhập trước")
-    setLoading(true)
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để viết đánh giá.");
+      return;
+    }
+
+    if (!comment.trim()) {
+      toast.error("Vui lòng nhập nội dung đánh giá.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await fetch("/api/service/write-review", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.userId,
-          serviceId: serviceId,
-          context: comment,
-          rating: rating,
+          serviceId,
+          context: comment.trim(),
+          rating,
         }),
-      })
+      });
 
-      const result = await res.json()
-      if (result.success) {
-        onReviewAdded(result.data) // update review list
-        setOpen(false)
-        setComment("")
-        setRating(0)
-        router.reload();
-      } else {
-        alert(result.message || "Gửi đánh giá thất bại")
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.message || "Gửi đánh giá thất bại.");
       }
-    } catch (err) {
-      alert("Lỗi khi gửi đánh giá")
+
+      onReviewAdded(result.data);
+      setOpen(false);
+      setComment("");
+      setRating(5);
+      toast.success("Đã gửi đánh giá của bạn.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gửi đánh giá thất bại.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <>
-      <Button variant="outline" className="text-orange-500 border-orange-500 hover:bg-orange-50" onClick={() => setOpen(true)}>
+      <Button variant="outline" className="border-[#b44735] text-[#b44735] hover:bg-[#fff5ee]" onClick={() => setOpen(true)}>
         Viết đánh giá
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Viết đánh giá</DialogTitle>
+            <DialogTitle>Đánh giá dịch vụ</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Rating stars */}
             <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
+              {[1, 2, 3, 4, 5].map((star) => (
                 <Star
-                  key={i}
-                  className={`w-6 h-6 cursor-pointer ${i <= rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                  onClick={() => setRating(i)}
+                  key={star}
+                  className={`size-7 cursor-pointer ${star <= rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`}
+                  onClick={() => setRating(star)}
                 />
               ))}
             </div>
             <Textarea
-              placeholder="Viết đánh giá của bạn..."
+              placeholder="Chia sẻ trải nghiệm của bạn về dịch vụ này..."
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={(event) => setComment(event.target.value)}
+              className="min-h-28"
             />
           </div>
           <DialogFooter>
-            <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Đang gửi..." : "Gửi"}
+            <Button onClick={handleSubmit} disabled={loading} className="bg-[#1f6654] hover:bg-[#174d3f]">
+              {loading ? "Đang gửi..." : "Gửi đánh giá"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
-  
+
 export default function BookingPage() {
   const params = useParams();
   const serviceId = params.id as string;
-  const { user} = useAuth();
+  const router = useRouter();
+  const { user } = useAuth();
+
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isContacting, setIsContacting] = useState(false); // Thêm state cho nút contact
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchServiceDetail = async () => {
       setLoading(true);
+      setError(null);
+
+      try {
+        const cachedService = sessionStorage.getItem(`service:${serviceId}`);
+        if (cachedService) {
+          setService(JSON.parse(cachedService));
+          setLoading(false);
+        }
+      } catch {}
+
       try {
         const res = await fetch(`/api/service/service/${serviceId}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
-        if (!res.ok) throw new Error("Không tải được chi tiết dịch vụ");
+        if (!res.ok) throw new Error("Không tải được chi tiết dịch vụ.");
+
         const result = await res.json();
+        if (!isMounted) return;
+
         setService(result.data);
+        try {
+          sessionStorage.setItem(`service:${serviceId}`, JSON.stringify(result.data));
+        } catch {}
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
+        if (isMounted) setError(err instanceof Error ? err.message : "Đã xảy ra lỗi.");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
+
     fetchServiceDetail();
+
+    return () => {
+      isMounted = false;
+    };
   }, [serviceId]);
 
-const handleContact = () => {
+  const reviewCount = service?.serviceReviews?.length || 0;
+  const avgRating = useMemo(() => {
+    if (!service || reviewCount === 0) return 5;
+    return service.serviceReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount;
+  }, [reviewCount, service]);
+
+  const handleQuoteChat = () => {
     if (!user) {
-      toast.error("Vui lòng đăng nhập để bắt đầu cuộc trò chuyện.");
+      toast.error("Vui lòng đăng nhập để chat với shop.");
       router.push("/login");
       return;
     }
-    if (!service || !service.shop) return;
-      
-      // Điều hướng đến trang chat với ID của conversation
-      router.push(`/chat?new=${service.shop.shopId}`);
+
+    if (!service?.shop?.shopId) {
+      toast.error("Không tìm thấy thông tin shop.");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      new: service.shop.shopId,
+      serviceId: service.serviceId,
+      serviceName: service.serviceName,
+      shopName: service.shop.shopName || "Shop dịch vụ",
+      quote: `Xin chào ${service.shop.shopName || "shop"}, mình muốn nhận báo giá cho dịch vụ "${service.serviceName}". Shop tư vấn giúp mình về giá, lịch trống và các lưu ý khi đặt lịch nhé.`,
+    });
+
+    router.push(`/chat?${params.toString()}`);
   };
 
-  if (loading) return (
-    <>
-      <Navigation />
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-center">Đang tải chi tiết dịch vụ...</p>
-      </div>
-      <Footer />
-    </>
-  );
-
-  if (error || !service) return (
-    <>
-      <Navigation />
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Không tìm thấy dịch vụ</h1>
-          <Link href="/features">
-            <Button>Quay lại Dịch vụ</Button>
-          </Link>
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <div className="flex min-h-screen items-center justify-center bg-[#f7faf7] text-[#526761]">
+          Đang tải chi tiết dịch vụ...
         </div>
-      </div>
-      <Footer />
-    </>
-  );
+        <Footer />
+      </>
+    );
+  }
 
-  const reviewCount = service.serviceReviews.length;
-  const avgRating = reviewCount > 0
-    ? service.serviceReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
-    : 0;
-
-  // Xử lý serviceImageUrl linh hoạt với cả chuỗi và mảng
-  const serviceImageUrl = service.serviceImageUrl
-    ? Array.isArray(service.serviceImageUrl)
-      ? service.serviceImageUrl[0] || "/placeholder.svg"
-      : typeof service.serviceImageUrl === "string" && service.serviceImageUrl.trim() !== ""
-        ? service.serviceImageUrl
-        : "/placeholder.svg"
-    : "/placeholder.svg"; 
+  if (error || !service) {
+    return (
+      <>
+        <Navigation />
+        <div className="flex min-h-screen items-center justify-center bg-[#f7faf7] px-4">
+          <Card className="max-w-md text-center">
+            <CardContent className="p-8">
+              <h1 className="mb-3 text-2xl font-bold text-[#16312a]">Không tìm thấy dịch vụ</h1>
+              <p className="mb-6 text-sm text-[#687d76]">{error || "Dịch vụ này hiện không khả dụng."}</p>
+              <Button asChild className="bg-[#1f6654] hover:bg-[#174d3f]">
+                <Link href="/features">Quay lại dịch vụ</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <div className="mb-6">
-            <Button variant="ghost" asChild className="mb-4">
-              <Link href="/features" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="h-4 w-4" />
-                Quay lại Dịch vụ
+      <main className="min-h-screen bg-[#f7faf7]">
+        <section className="border-b border-[#dce6df] bg-white">
+          <div className="container mx-auto max-w-6xl px-4 py-6">
+            <Button variant="ghost" asChild className="mb-4 text-[#526761] hover:text-[#16312a]">
+              <Link href="/features">
+                <ArrowLeft className="mr-2 size-4" />
+                Quay lại dịch vụ
               </Link>
             </Button>
-          </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Header */}
-              <div className="flex items-start gap-4">
-                <Image
-                  src={getAvatarUrl(service.shop?.shopImageUrl, DEFAULT_SHOP_AVATAR)}
-                  alt={service.shop?.shopName || "Cửa hàng"}
-                  width={80}
-                  height={80}
-                  className="rounded-full object-cover bg-gray-200"
-                />
-                <div className="flex-1">
-                  <h1 className="text-2xl font-bold">
-                    {service.serviceName} <span className="text-gray-500">@{service.shop?.location || "Chưa rõ"}</span>
-                  </h1>
-                  <div className="flex items-center gap-2 mt-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${i < avgRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                      />
-                    ))}
-                    <span className="text-sm text-gray-600">{reviewCount} Đánh giá</span>
-                  </div>
+            <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+              <div>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center rounded-full bg-[#eef8f3] px-3 py-1 text-xs font-bold text-[#1f6654]">
+                    <ShieldCheck className="mr-1.5 size-3.5" />
+                    Shop đã xác thực
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-[#fff5ee] px-3 py-1 text-xs font-bold text-[#b44735]">
+                    Báo giá qua chat
+                  </span>
+                </div>
+                <h1 className="text-3xl font-extrabold leading-tight text-[#16312a] md:text-4xl">{service.serviceName}</h1>
+                <p className="mt-4 max-w-2xl text-[#526761]">{service.description}</p>
+                <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-[#687d76]">
+                  <span className="flex items-center gap-2">
+                    <Store className="size-4 text-[#1f6654]" />
+                    {service.shop?.shopName || "Shop dịch vụ"}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <MapPin className="size-4 text-[#b44735]" />
+                    {service.shop?.location || service.shop?.address || "Đà Nẵng"}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <RatingStars value={avgRating} />
+                    {avgRating.toFixed(1)} ({reviewCount} đánh giá)
+                  </span>
                 </div>
               </div>
 
-              {/* Image Gallery */}
-              <Card className="overflow-hidden shadow-lg">
-                <CardContent className="p-0">
-                  <div className="relative w-full h-96">
-                    <Image
-                      src={serviceImageUrl}
-                      alt={`Ảnh dịch vụ ${service.serviceName}`}
-                      fill
-                      className="object-cover transition-transform duration-300 hover:scale-105 rounded-lg"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              <Card className="border-[#dce6df] shadow-sm">
+                <CardContent className="p-5">
+                  <div className="mb-4 flex items-center gap-3">
+                    <img
+                      src={getAvatarUrl(service.shop?.shopImageUrl, DEFAULT_SHOP_AVATAR)}
+                      alt={service.shop?.shopName || "Shop dịch vụ"}
+                      className="size-14 rounded-full border object-cover"
                     />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Description */}
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-gray-700 leading-relaxed mb-6">{service.description}</p>
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Chi tiết cửa hàng</h3>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Tên cửa hàng:</span> {service.shop?.shopName || "Không có"}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Địa chỉ:</span> {service.shop?.address || "Không có"}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Reviews */}
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg">{reviewCount} Đánh giá</CardTitle>
-                  <WriteReviewDialog
-                    serviceId={service.serviceId}
-                    onReviewAdded={(newReview) => {
-                      setService((prev) =>
-                        prev ? { ...prev, serviceReviews: [...prev.serviceReviews, newReview] } : prev
-                      )
-                    }}
-                  />
-                </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-4">
-                  {service.serviceReviews.map((review) => (
-                    <div key={review.reviewId} className="flex gap-4">
-                      <Image
-                        src={getAvatarUrl(review.users?.profilePictureUrl)}
-                        alt={review.users?.fullName || "Người dùng"}
-                        width={40}
-                        height={40}
-                        className="rounded-full object-cover bg-gray-200"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold">{review.users?.fullName || "Ẩn danh"}</span>
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <p className="text-gray-700">{review.comment}</p>
-                      </div>
+                    <div>
+                      <p className="font-bold text-[#16312a]">{service.shop?.shopName || "Shop dịch vụ"}</p>
+                      <p className="text-sm text-[#687d76]">{service.shop?.address || "Địa chỉ đang cập nhật"}</p>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Contact Card */}
-              <Card className="bg-purple-100">
-                <CardContent className="p-6 text-center">
-                  <h3 className="font-semibold text-lg mb-2">Trò chuyện & Gặp gỡ</h3>
-                  <p className="text-sm text-gray-600 mb-4">Làm quen trước khi đặt lịch</p>
-                  <Button className="w-full bg-purple-500 hover:bg-purple-600 mb-2"
-                    onClick={handleContact}>Liên hệ</Button>
-                </CardContent>
-              </Card>
-
-              {/* Service Pricing */}
-              <Card className="bg-orange-100">
-                <CardContent className="p-6 text-center">
-                  <h3 className="font-semibold text-lg mb-2">{service.serviceName}</h3>
-                  {service.pricePerPerson === 0 ? (
-                    <>
-                      <p className="text-sm text-gray-500">Vui lòng liên hệ cửa hàng để biết giá dịch vụ</p>
-                      <br  />
-                    </>
-                  )
-                  : (
-                    <p className="text-3xl font-bold text-orange-600 mb-2">
-                      {new Intl.NumberFormat("vi-VN").format(service.pricePerPerson)} đ
-                    </p>
-                  )}
-                  <Link href={service.shop?.socialMediaLinks || "#"} target="_blank">
-                    <Button className="w-full bg-orange-500 hover:bg-orange-600 mb-2">
-                      Trang cửa hàng
+                  </div>
+                  <div className="rounded-lg bg-[#f7faf7] p-4 text-center">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[#687d76]">Giá tham khảo</p>
+                    {service.pricePerPerson > 0 ? (
+                      <p className="mt-1 text-3xl font-extrabold text-[#b44735]">
+                        {new Intl.NumberFormat("vi-VN").format(service.pricePerPerson)} đ
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-lg font-bold text-[#b44735]">Liên hệ shop để nhận giá</p>
+                    )}
+                  </div>
+                  <Button className="mt-4 w-full bg-[#b44735] hover:bg-[#9c3828]" onClick={handleQuoteChat}>
+                    <MessageCircle className="mr-2 size-4" />
+                    Nhận báo giá qua chat
+                  </Button>
+                  {service.shop?.socialMediaLinks && (
+                    <Button asChild variant="outline" className="mt-2 w-full">
+                      <Link href={service.shop.socialMediaLinks} target="_blank">
+                        Trang của shop
+                      </Link>
                     </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-
-              {/* Contact Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Thông tin liên hệ</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 pt-0 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-gray-500" />
-                    <span>{service.shop?.location || "Không có"}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-gray-500" />
-                    <span>Liên hệ qua nền tảng</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="w-5 h-5 text-gray-500" />
-                    <span>Nhắn tin trực tiếp</span>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+
+        <section className="container mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[1fr_22rem]">
+          <div className="space-y-6">
+            <Card className="overflow-hidden border-[#dce6df] shadow-sm">
+              <CardContent className="p-0">
+                <div className="relative h-[24rem] w-full bg-[#eef3ee]">
+                  <ServiceImage
+                    src={service.serviceImageUrl}
+                    alt={`Ảnh dịch vụ ${service.serviceName}`}
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 760px"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { icon: MessageCircle, title: "Chat báo giá", text: "Tin nhắn mẫu tự điền tên dịch vụ và shop." },
+                { icon: CalendarCheck, title: "Hẹn lịch dễ dàng", text: "Trao đổi thời gian và địa điểm trước khi đặt." },
+                { icon: CheckCircle2, title: "Rõ thông tin", text: "Xem shop, giá, mô tả và đánh giá tại một nơi." },
+              ].map((item) => (
+                <Card key={item.title} className="border-[#dce6df] shadow-sm">
+                  <CardContent className="p-4">
+                    <item.icon className="mb-3 size-5 text-[#1f6654]" />
+                    <h3 className="text-sm font-bold text-[#16312a]">{item.title}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-[#687d76]">{item.text}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <Card className="border-[#dce6df] shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-[#16312a]">Mô tả dịch vụ</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-[#526761]">
+                <p className="leading-relaxed">{service.description}</p>
+                <div className="grid gap-3 rounded-lg bg-[#f7faf7] p-4 sm:grid-cols-2">
+                  <p>
+                    <span className="font-semibold text-[#16312a]">Shop:</span> {service.shop?.shopName || "Đang cập nhật"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#16312a]">Khu vực:</span> {service.shop?.location || "Đà Nẵng"}
+                  </p>
+                  <p className="sm:col-span-2">
+                    <span className="font-semibold text-[#16312a]">Địa chỉ:</span> {service.shop?.address || "Đang cập nhật"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-[#dce6df] shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <CardTitle className="text-[#16312a]">{reviewCount} đánh giá</CardTitle>
+                <WriteReviewDialog
+                  serviceId={service.serviceId}
+                  onReviewAdded={(newReview) => {
+                    setService((prev) =>
+                      prev ? { ...prev, serviceReviews: [...(prev.serviceReviews || []), newReview] } : prev,
+                    );
+                  }}
+                />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {reviewCount === 0 ? (
+                  <div className="rounded-lg border border-dashed border-[#dce6df] p-8 text-center text-sm text-[#687d76]">
+                    Chưa có đánh giá nào cho dịch vụ này.
+                  </div>
+                ) : (
+                  service.serviceReviews.map((review) => (
+                    <div key={review.reviewId} className="flex gap-3 rounded-lg border border-[#eef3ee] p-4">
+                      <img
+                        src={getAvatarUrl(review.users?.profilePictureUrl)}
+                        alt={review.users?.fullName || "Người dùng"}
+                        className="size-10 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold text-[#16312a]">{review.users?.fullName || "Ẩn danh"}</span>
+                          <RatingStars value={review.rating} />
+                          <span className="text-xs text-[#8a9a94]">
+                            {review.createdAt ? new Date(review.createdAt).toLocaleDateString("vi-VN") : ""}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-sm leading-relaxed text-[#526761]">{review.comment}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <aside className="space-y-4">
+            <Card className="sticky top-24 border-[#dce6df] shadow-sm">
+              <CardContent className="p-5">
+                <h3 className="mb-3 text-lg font-bold text-[#16312a]">Cần shop tư vấn?</h3>
+                <p className="mb-4 text-sm leading-relaxed text-[#687d76]">
+                  Gửi yêu cầu báo giá qua chat để shop tư vấn giá, lịch trống và các lưu ý riêng cho thú cưng của bạn.
+                </p>
+                <Button className="w-full bg-[#b44735] hover:bg-[#9c3828]" onClick={handleQuoteChat}>
+                  <MessageCircle className="mr-2 size-4" />
+                  Báo giá qua chat
+                </Button>
+                <div className="mt-5 space-y-3 text-sm text-[#526761]">
+                  <div className="flex items-center gap-3">
+                    <Phone className="size-4 text-[#1f6654]" />
+                    Liên hệ qua nền tảng
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <MapPin className="size-4 text-[#1f6654]" />
+                    {service.shop?.location || "Đà Nẵng"}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="size-4 text-[#1f6654]" />
+                    Shop dịch vụ đã được kiểm duyệt
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
+        </section>
+      </main>
       <Footer />
     </>
   );

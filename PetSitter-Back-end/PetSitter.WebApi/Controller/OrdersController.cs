@@ -98,39 +98,40 @@ namespace PetSitter.WebApi.Controller
         [HttpGet("getAllOrders")]
         public async Task<IActionResult> GetAllOrders()
         {
-            //var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            //if (!Guid.TryParse(userIdString, out var userId))
-            //{
-            //    return Unauthorized(new { message = "Invalid user token." });
-            //}
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized(new { message = "Invalid user token." });
+            }
             try
             {
-                var orders = await _orderRepository.GetAllOrderAsync();
+                var orders = await _orderRepository.GetOrdersByUserIdAsync(userId);
 
                 if (orders == null || !orders.Any())
                 {
                     return NotFound(new { message = "Orders are empty" });
                 }
 
-                var orderItems = orders
-                    .SelectMany(o => o.OrderItems)
-                    .Where(oi => oi.Status == 1);
-
-                var ordersDto = orderItems
-                    .GroupBy(oi => oi.Product.Shop)
+                var ordersDto = orders
+                    .SelectMany(o => o.OrderItems.Select(oi => new { Order = o, OrderItem = oi }))
+                    .GroupBy(x => new { x.Order.OrderId, Shop = x.OrderItem.Product.Shop })
                     .Select(g => new OrderDetailDto
                     {
-                        ShopId = g.Key.ShopId,
-                        ShopName = g.Key.ShopName,
-                        TotalAmount = g.Sum(i => i.Quantity * i.Price),
-                        Items = g.Select(i => new OrderItemDto
+                        OrderId = g.Key.OrderId,
+                        ShopId = g.Key.Shop.ShopId,
+                        ShopName = g.Key.Shop.ShopName,
+                        TotalAmount = g.Sum(x => x.OrderItem.Quantity * x.OrderItem.Price),
+                        Status = g.First().Order.Status.ToString(),
+                        CreatedAt = g.First().Order.CreatedAt,
+                        ShippingAddress = g.First().Order.ShippingAddress,
+                        Items = g.Select(x => new OrderItemDto
                         {
-                            ItemId = i.OrderItemId,
-                            ProductId = i.ProductId,
-                            ProductImage = i.Product.ProductImageUrl,
-                            ProductName = i.Product.ProductName,
-                            Quantity = i.Quantity,
-                            Price = i.Price,
+                            ItemId = x.OrderItem.OrderItemId,
+                            ProductId = x.OrderItem.ProductId,
+                            ProductImage = x.OrderItem.Product.ProductImageUrl,
+                            ProductName = x.OrderItem.Product.ProductName,
+                            Quantity = x.OrderItem.Quantity,
+                            Price = x.OrderItem.Price,
                         }).ToList()
                     });
 

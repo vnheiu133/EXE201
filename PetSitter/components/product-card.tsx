@@ -1,31 +1,49 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Heart, Star } from "lucide-react"
+import Image from "next/image";
+import Link from "next/link";
+import { Heart, ShoppingCart, Star } from "lucide-react";
+import { toast } from "sonner";
 
-import type { Product } from "@/types/product"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import type { Product } from "@/types/product";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useCart } from "@/contexts/cart-context";
 
 interface ProductCardProps {
-  product: Product
+  product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const reviewCount = product.reviews?.length ?? 0
+  const { addToCart } = useCart();
+  const reviewCount = product.reviews?.length ?? 0;
   const averageRating =
-    reviewCount > 0 ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount : product.rating ?? 0
+    reviewCount > 0 ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount : product.rating ?? 0;
+
+  const cacheProductForDetail = () => {
+    try {
+      sessionStorage.setItem(`product:${product.productId}`, JSON.stringify(product));
+    } catch {
+      // Browsers can block storage; navigation should still work normally.
+    }
+  };
 
   const toggleFavorite = (event: React.MouseEvent) => {
-    event.preventDefault()
-    event.stopPropagation()
-  }
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  const handleAddToCart = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    addToCart(product, 1);
+    toast.success(`${product.productName} đã được thêm vào giỏ hàng!`);
+  };
 
   return (
-    <Link href={`/shop/product/${product.productId}`} className="block h-full">
+    <Link href={`/shop/product/${product.productId}`} className="block h-full" onClick={cacheProductForDetail}>
       <Card className="group h-full cursor-pointer gap-0 overflow-hidden py-0 transition duration-300 hover:-translate-y-0.5 hover:border-[#bfd1c8] hover:shadow-[0_18px_46px_rgba(22,49,42,0.14)]">
         <CardContent className="flex h-full flex-col p-0">
           <div className="relative aspect-[4/3] overflow-hidden bg-[#eef3ee]">
@@ -70,11 +88,19 @@ export function ProductCard({ product }: ProductCardProps) {
               <span className="text-xl font-semibold text-[#16312a]">
                 {new Intl.NumberFormat("vi-VN").format(product.price)} đ
               </span>
-              <span className="text-xs font-semibold uppercase text-[#b44735]">Xem sản phẩm</span>
+              <Button
+                type="button"
+                size="icon"
+                aria-label={`Thêm ${product.productName} vào giỏ hàng`}
+                className="size-9 bg-[#b44735] text-white hover:bg-[#9c3828]"
+                onClick={handleAddToCart}
+              >
+                <ShoppingCart className="size-4" />
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
     </Link>
-  )
+  );
 }

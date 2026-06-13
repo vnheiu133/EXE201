@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using PetSitter.DataAccess.Repository.Interfaces;
 using PetSitter.Models.DTO;
 using PetSitter.Models.Models;
+using PetSitter.WebApi.Services;
 using System.Security.Claims;
 
 namespace PetSitter.WebApi.Controller
@@ -14,10 +15,12 @@ namespace PetSitter.WebApi.Controller
     public class ChatController : ControllerBase
     {
         private readonly IChatRepository _chatRepository;
+        private readonly ChatPresenceService _presenceService;
 
-        public ChatController(IChatRepository chatRepository)
+        public ChatController(IChatRepository chatRepository, ChatPresenceService presenceService)
         {
             _chatRepository = chatRepository;
+            _presenceService = presenceService;
         }
 
         // Lấy danh sách các cuộc trò chuyện của người dùng hiện tại
@@ -35,7 +38,12 @@ namespace PetSitter.WebApi.Controller
                     conv.PetOwner.UserId,
                     conv.PetOwner.FullName,
                     conv.PetOwner.ProfilePictureUrl,
-                    Role = (int)conv.PetOwner.Role
+                    Role = (int)conv.PetOwner.Role,
+                    IsOnline = _presenceService.IsOnline(conv.PetOwner.UserId),
+                    LastActiveAt = DateTime.SpecifyKind(
+                        _presenceService.GetLastActiveAt(conv.PetOwner.UserId) ?? conv.PetOwner.UpdatedAt,
+                        DateTimeKind.Utc
+                    ).ToString("o")
                 },
                 Shop = new 
                 {
@@ -47,7 +55,12 @@ namespace PetSitter.WebApi.Controller
                         conv.Shop.User.UserId,
                         conv.Shop.User.FullName,
                         conv.Shop.User.ProfilePictureUrl,
-                        Role = (int)conv.Shop.User.Role
+                        Role = (int)conv.Shop.User.Role,
+                        IsOnline = _presenceService.IsOnline(conv.Shop.User.UserId),
+                        LastActiveAt = DateTime.SpecifyKind(
+                            _presenceService.GetLastActiveAt(conv.Shop.User.UserId) ?? conv.Shop.User.UpdatedAt,
+                            DateTimeKind.Utc
+                        ).ToString("o")
                     } 
                 },
                 CreatedAt = DateTime.SpecifyKind(conv.CreatedAt, DateTimeKind.Utc).ToString("o"),

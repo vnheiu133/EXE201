@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PetSitter.DataAccess.Repository.Interfaces;
 using PetSitter.Models.Models;
 using PetSitter.Models.Request;
@@ -128,6 +128,24 @@ public class ShopRepository : IShopRepository
         shop.ShopImageUrl = shopImageUrl;
         shop.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+        return shop;
+    }
+
+    public async Task<Shops?> UploadShopImage(Guid shopId, Microsoft.AspNetCore.Http.IFormFile file)
+    {
+        var shop = await _context.Shops.FirstOrDefaultAsync(s => s.ShopId == shopId);
+        if (shop == null)
+        {
+            return null;
+        }
+
+        var imageUrl = await _cloudinary.UploadImage(file);
+        if (imageUrl != null)
+        {
+            shop.ShopImageUrl = imageUrl;
+            shop.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
         return shop;
     }
     

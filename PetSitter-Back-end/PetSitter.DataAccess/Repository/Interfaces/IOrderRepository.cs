@@ -14,5 +14,6 @@ namespace PetSitter.DataAccess.Repository.Interfaces
         Task<Orders> FindByOrderCodeAsync(long orderCode);
         Task UpdateOrderAsync(Orders order);
         Task<IEnumerable<Orders>> GetAllOrderAsync();
+        Task<IEnumerable<Orders>> GetOrdersByUserIdAsync(Guid userId);
     }
 }

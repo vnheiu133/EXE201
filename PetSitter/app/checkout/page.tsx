@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Banknote, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -12,14 +12,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CartItem, useCart } from "@/contexts/cart-context";
 import { useAuth } from "@/contexts/auth-context";
+import { useStates } from "@/components/api/location";
 
 const currency = new Intl.NumberFormat("vi-VN");
 type PaymentMethod = "PayOS" | "COD";
 
+const getCheckoutStorageKeys = (checkoutStorageKey: string) =>
+  Array.from(new Set([checkoutStorageKey, "checkoutCartItems"]));
+
+const readStoredCheckoutItems = (keys: string[]) => {
+  for (const key of keys) {
+    const storedItems = localStorage.getItem(key);
+    if (!storedItems) continue;
+
+    try {
+      const parsedItems = JSON.parse(storedItems) as CartItem[];
+      if (Array.isArray(parsedItems) && parsedItems.length > 0) {
+        return parsedItems;
+      }
+    } catch {
+      localStorage.removeItem(key);
+    }
+  }
+
+  return null;
+};
+
 export default function CheckoutPage() {
-  const { cart, clearCart } = useCart();
+  const { cart, hasLoadedCart, removeItemsFromCart, checkoutStorageKey } = useCart();
   const { user, token } = useAuth();
   const router = useRouter();
+  const { states } = useStates("VN");
 
   const [shippingAddress, setShippingAddress] = useState(user?.address || "");
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
@@ -31,34 +54,45 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const storedItems = localStorage.getItem("checkoutCartItems");
+    const storedItems = readStoredCheckoutItems(getCheckoutStorageKeys(checkoutStorageKey));
     if (storedItems) {
-      try {
-        const parsedItems = JSON.parse(storedItems) as CartItem[];
-        if (Array.isArray(parsedItems) && parsedItems.length > 0) {
-          setCheckoutItems(parsedItems);
-          setHasLoadedCheckoutItems(true);
-          return;
-        }
-      } catch {
-        localStorage.removeItem("checkoutCartItems");
-      }
+      setCheckoutItems(storedItems);
+      setHasLoadedCheckoutItems(true);
+      return;
+    }
+
+    if (!hasLoadedCart) {
+      return;
     }
 
     setCheckoutItems(cart);
     setHasLoadedCheckoutItems(true);
-  }, [cart]);
+  }, [cart, checkoutStorageKey, hasLoadedCart]);
 
   useEffect(() => {
     setShippingAddress((current) => current || user?.address || "");
     setPhoneNumber((current) => current || user?.phoneNumber || "");
   }, [user]);
 
+  useEffect(() => {
+    if (hasLoadedCheckoutItems && checkoutItems.length === 0) {
+      router.replace("/cart");
+    }
+  }, [checkoutItems.length, hasLoadedCheckoutItems, router]);
+
   const total = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  const addressSuggestions = useMemo(() => {
+    const suggestions = [user?.address, ...states.map((state) => `${state.name}, Việt Nam`)].filter(
+      (value): value is string => Boolean(value?.trim()),
+    );
+
+    return Array.from(new Set(suggestions));
+  }, [states, user?.address]);
+
   const finishLocalOrder = () => {
-    clearCart();
-    localStorage.removeItem("checkoutCartItems");
+    removeItemsFromCart(checkoutItems.map((item) => item.productId));
+    getCheckoutStorageKeys(checkoutStorageKey).forEach((key) => localStorage.removeItem(key));
     toast.success("Đặt hàng thành công. Bạn sẽ thanh toán khi nhận hàng.");
     router.push("/orders");
   };
@@ -133,8 +167,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (hasLoadedCheckoutItems && checkoutItems.length === 0 && typeof window !== "undefined") {
-    router.replace("/cart");
+  if (hasLoadedCheckoutItems && checkoutItems.length === 0) {
     return null;
   }
 
@@ -152,11 +185,17 @@ export default function CheckoutPage() {
                   <Label htmlFor="address">Địa chỉ giao hàng</Label>
                   <Input
                     id="address"
+                    list="shipping-address-suggestions"
                     placeholder="Nhập địa chỉ giao hàng của bạn"
                     value={shippingAddress}
                     onChange={(event) => setShippingAddress(event.target.value)}
                     className="mt-1"
                   />
+                  <datalist id="shipping-address-suggestions">
+                    {addressSuggestions.map((suggestion) => (
+                      <option key={suggestion} value={suggestion} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <Label htmlFor="phoneNumber">Số điện thoại</Label>

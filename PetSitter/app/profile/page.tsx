@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, MapPinIcon, MailIcon, UserIcon, EditIcon, SaveIcon, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { updateProfile, changePassword } from "@/components/api/user";
-import { getShopByUserId, updateShopImage } from "@/components/api/shop";
+import { getShopByUserId, updateShopImage, uploadShopImage } from "@/components/api/shop";
 import { UserRole } from "@/enum/UserRole";
 import { DEFAULT_SHOP_AVATAR, getAvatarUrl } from "@/lib/avatar";
 
@@ -40,6 +40,7 @@ export default function ProfilePage() {
   const [storedUser, setStoredUser] = useState<any>(null);
   const [shopData, setShopData] = useState<any>(null);
   const [shopImageUrl, setShopImageUrl] = useState("");
+  const [uploadingShopImage, setUploadingShopImage] = useState(false);
 
   // Load dữ liệu từ localStorage chỉ trên client-side
   useEffect(() => {
@@ -118,6 +119,29 @@ export default function ProfilePage() {
       setSuccess("Cập nhật ảnh cửa hàng thành công");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi cập nhật ảnh cửa hàng");
+    }
+  };
+
+  const handleUploadShopImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingShopImage(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      if (!shopData?.shopId) throw new Error("Không tìm thấy cửa hàng");
+      const response = await uploadShopImage(shopData.shopId, file);
+      if (!response.success) throw new Error(response.message || "Tải ảnh lên thất bại");
+
+      setShopData(response.data);
+      setShopImageUrl(response.data.shopImageUrl || "");
+      setSuccess("Tải ảnh cửa hàng lên thành công!");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi tải ảnh lên");
+    } finally {
+      setUploadingShopImage(false);
     }
   };
 
@@ -509,18 +533,23 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="shopImageUrl">URL ảnh đại diện cửa hàng</Label>
-                      <Input
-                        id="shopImageUrl"
-                        value={shopImageUrl}
-                        onChange={(event) => setShopImageUrl(event.target.value)}
-                        placeholder="https://..."
-                      />
+                      <Label htmlFor="shopImageUrl">Ảnh đại diện cửa hàng *</Label>
+                      <div className="flex flex-col gap-2">
+                        <Input
+                          id="shopImageUrl"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleUploadShopImage}
+                          disabled={uploadingShopImage}
+                          className="cursor-pointer"
+                        />
+                        {uploadingShopImage && (
+                          <p className="text-xs text-emerald-600 animate-pulse font-medium">
+                            Đang tải ảnh lên Cloudinary...
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <Button onClick={handleSaveShopImage} className="w-full justify-start">
-                      <SaveIcon className="mr-2 h-4 w-4" />
-                      Lưu ảnh cửa hàng
-                    </Button>
                   </CardContent>
                 </Card>
               )}

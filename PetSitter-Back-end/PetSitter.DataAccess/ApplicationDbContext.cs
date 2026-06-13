@@ -54,6 +54,12 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Conversation>().HasKey(c => c.ConversationId);
         modelBuilder.Entity<Message>().HasKey(m => m.MessageId);
 
+        modelBuilder.Entity<Bookings>().Property(x => x.TotalPrice).HasPrecision(18, 2);
+        modelBuilder.Entity<OrderItem>().Property(x => x.Price).HasPrecision(18, 2);
+        modelBuilder.Entity<Orders>().Property(x => x.TotalAmount).HasPrecision(18, 2);
+        modelBuilder.Entity<Products>().Property(x => x.Price).HasPrecision(18, 2);
+        modelBuilder.Entity<Services>().Property(x => x.PricePerPerson).HasPrecision(18, 2);
+
         modelBuilder.Entity<Conversation>()
             .HasOne(c => c.PetOwner)
             .WithMany() 

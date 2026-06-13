@@ -29,6 +29,7 @@ import { DEFAULT_SHOP_AVATAR, getAvatarUrl } from "@/lib/avatar"
 export default function ProductDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const productId = params?.id as string | undefined
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [quantity, setQuantity] = useState(1)
@@ -91,32 +92,58 @@ export default function ProductDetailPage() {
   }, [reviews])
 
   useEffect(() => {
-    if (params?.id) {
-      getProductById(params.id as string)
-        .then((data) => setProduct(data))
-        .catch(() => setProduct(null))
-        .finally(() => setLoading(false))
+    if (!productId) return
+
+    let isMounted = true
+    setLoading(true)
+
+    try {
+      const cachedProduct = sessionStorage.getItem(`product:${productId}`)
+      if (cachedProduct) {
+        setProduct(JSON.parse(cachedProduct))
+        setLoading(false)
+      }
+    } catch {
+      // Ignore corrupted or unavailable session storage.
     }
-  }, [params?.id])
+
+    getProductById(productId)
+      .then((data) => {
+        if (!isMounted) return
+        setProduct(data)
+        try {
+          sessionStorage.setItem(`product:${productId}`, JSON.stringify(data))
+        } catch {}
+      })
+      .catch(() => {
+        if (isMounted) setProduct(null)
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [productId])
 
   useEffect(() => {
-    if (params?.id) {
-      getRelatedProduct(params.id as string)
+    if (productId) {
+      getRelatedProduct(productId)
         .then((data) => setRelatedProducts(data))
         .catch(() => setRelatedProducts([]))
-        .finally(() => setLoading(false))
     }
-  }, [params?.id])
+  }, [productId])
 
   useEffect(() => {
-    if (params?.id) {
+    if (productId) {
       setLoadingReviews(true)
-      productReview(params.id as string)
+      productReview(productId)
         .then(setReviews)
         .catch(() => setReviews([]))
         .finally(() => setLoadingReviews(false))
     }
-  }, [params?.id])
+  }, [productId])
 
   if (loading) {
     return (

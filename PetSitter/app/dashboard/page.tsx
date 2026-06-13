@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -29,7 +30,6 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/auth-context";
-import IntermediaryDashboard from "@/components/intermediary-dashboard";
 import { Product } from "@/types/product";
 import { UserRole } from "@/enum/UserRole";
 import {
@@ -42,11 +42,24 @@ import {
     getProductCategories, getShopRevenue, getTotalSoldProducts,
 } from "@/components/api/shop";
 import { getServicesByShopId } from "@/components/api/feature";
-import ProductForm from "@/components/ProductForm";
 import type { Service } from "@/types/feature";
 
-// charts
-import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
+const IntermediaryDashboard = dynamic(() => import("@/components/intermediary-dashboard"), {
+  ssr: false,
+  loading: () => <div className="flex h-screen items-center justify-center text-gray-600">Dang tai dashboard...</div>,
+});
+
+const ProductForm = dynamic(() => import("@/components/ProductForm"), {
+  ssr: false,
+  loading: () => <div className="py-8 text-center text-sm text-gray-500">Dang tai form...</div>,
+});
+
+const ResponsiveContainer: any = dynamic(() => import("recharts").then((mod) => mod.ResponsiveContainer as any), { ssr: false });
+const BarChart: any = dynamic(() => import("recharts").then((mod) => mod.BarChart as any), { ssr: false });
+const XAxis: any = dynamic(() => import("recharts").then((mod) => mod.XAxis as any), { ssr: false });
+const YAxis: any = dynamic(() => import("recharts").then((mod) => mod.YAxis as any), { ssr: false });
+const Tooltip: any = dynamic(() => import("recharts").then((mod) => mod.Tooltip as any), { ssr: false });
+const Bar: any = dynamic(() => import("recharts").then((mod) => mod.Bar as any), { ssr: false });
 
 // Types
 type TagObj = { productTagId: string; productTagName: string };
@@ -110,8 +123,8 @@ export default function DashboardPage() {
         if (!mounted) return;
         setShopId(sid);
 
-        const [prodRes, countRes, orderRes, tagsRes, brandsRes, categoriesRes, revenueRes, soldRes, shopServices] = await Promise.all([
-          getProductsByShopId(sid),
+        const productsPromise = getProductsByShopId(sid);
+        const dashboardDataPromise = Promise.allSettled([
           getProductCountByShopId(sid),
           getOrderCountByShopId(sid),
           getProductTags(),
@@ -122,22 +135,40 @@ export default function DashboardPage() {
           getServicesByShopId(sid),
         ]);
 
+        const prodRes = await productsPromise;
+
         if (prodRes.success && prodRes.data) {
           setProducts(prodRes.data);
+          setStats((current) => ({ ...current, totalProducts: prodRes.data?.length || 0 }));
           // Không setFilteredProducts ở đây, để useEffect filter chính xử lý
         }
+        if (mounted) setLoading(false);
+
+        const [countResult, _orderResult, tagsResult, brandsResult, categoriesResult, revenueResult, soldResult, servicesResult] =
+          await dashboardDataPromise;
+
+        if (!mounted) return;
+
+        const countRes = countResult.status === "fulfilled" ? countResult.value : null;
+        const tagsRes = tagsResult.status === "fulfilled" ? tagsResult.value : null;
+        const brandsRes = brandsResult.status === "fulfilled" ? brandsResult.value : null;
+        const categoriesRes = categoriesResult.status === "fulfilled" ? categoriesResult.value : null;
+        const revenueRes = revenueResult.status === "fulfilled" ? revenueResult.value : null;
+        const soldRes = soldResult.status === "fulfilled" ? soldResult.value : null;
+        const shopServices = servicesResult.status === "fulfilled" ? servicesResult.value : [];
+
         setServices(shopServices);
 
           const newStats = {
-              totalProducts: countRes.success ? countRes.data || 0 : 0,
-              totalSold: soldRes.success ? soldRes.data || 0 : 0,
-              totalRevenue: revenueRes.success ? revenueRes.data || 0 : 0,
+              totalProducts: countRes?.success ? countRes.data || 0 : prodRes.data?.length || 0,
+              totalSold: soldRes?.success ? soldRes.data || 0 : 0,
+              totalRevenue: revenueRes?.success ? revenueRes.data || 0 : 0,
           };
           setStats(newStats);
 
-        if (tagsRes.success) setTags(tagsRes.data || []);
-        if (brandsRes.success) setBrands(brandsRes.data || []);
-        if (categoriesRes.success) setCategories(categoriesRes.data || []);
+        if (tagsRes?.success) setTags(tagsRes.data || []);
+        if (brandsRes?.success) setBrands(brandsRes.data || []);
+        if (categoriesRes?.success) setCategories(categoriesRes.data || []);
 
       } catch (err: any) {
         console.error(err);
@@ -615,7 +646,7 @@ const DashboardSidebar = React.memo(({
               <XAxis dataKey="category" hide />
               <YAxis stroke="#888" fontSize={12} />
               <Tooltip 
-                formatter={(value: number) => [`${value.toLocaleString()} nghìn đồng`, "Giá trị"]}
+                formatter={(value: unknown) => [`${Number(value).toLocaleString()} nghìn đồng`, "Giá trị"]}
                 cursor={{ fill: 'transparent' }} 
               />
               <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]} />

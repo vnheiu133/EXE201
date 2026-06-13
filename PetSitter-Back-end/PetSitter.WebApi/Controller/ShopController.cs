@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using PetSitter.DataAccess.Repository.Interfaces;
 using PetSitter.Models.Models;
 using PetSitter.Models.Request;
@@ -153,6 +153,45 @@ public class ShopController : ControllerBase
         response.Message = "Shop image updated successfully";
         response.Data = shop;
         return Ok(response);
+    }
+
+    [HttpPost("{shopId}/image/upload")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadShopImage([FromRoute] Guid shopId, IFormFile file)
+    {
+        var response = new BaseResultResponse<Shops?>();
+
+        if (file == null || file.Length == 0)
+        {
+            response.Success = false;
+            response.Message = "No file uploaded";
+            response.Data = null;
+            return BadRequest(response);
+        }
+
+        try
+        {
+            var shop = await _shopRepository.UploadShopImage(shopId, file);
+            if (shop == null)
+            {
+                response.Success = false;
+                response.Message = "Shop not found";
+                response.Data = null;
+                return NotFound(response);
+            }
+
+            response.Success = true;
+            response.Message = "Shop image uploaded successfully";
+            response.Data = shop;
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.Message = ex.Message;
+            response.Data = null;
+            return Ok(response);
+        }
     }
 
     [HttpGet("{shopId}/orders/revenue")]

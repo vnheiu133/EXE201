@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <NuGetAudit>false</NuGetAudit>
+    <NoWarn>$(NoWarn);CS8603;CS8604;CS8618;CS8765</NoWarn>
+  </PropertyGroup>
+</Project>

@@ -360,3 +360,20 @@ export async function updateShopImage(shopId: string, shopImageUrl: string): Pro
 
     return result;
 }
+
+export async function uploadShopImage(shopId: string, file: File): Promise<ApiResponse<any>> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${API_BASE}/${shopId}/image/upload`, {
+        method: "POST",
+        body: formData,
+    });
+
+    const result = await res.json();
+    if (!res.ok) {
+        throw new Error(result.message || "Tải ảnh cửa hàng thất bại");
+    }
+
+    return result;
+}

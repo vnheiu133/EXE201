@@ -1,4 +1,5 @@
 import type { Service, ServiceTag } from "@/types/feature";
+import { normalizeImageUrl } from "@/lib/image-url";
 
 export async function getListServices(): Promise<{ services: Service[]; tags: ServiceTag[] }> {
     try {
@@ -21,7 +22,7 @@ export async function getListServices(): Promise<{ services: Service[]; tags: Se
 
         const services = serviceResult.data.map((item: any) => ({
             ...item,
-            serviceImageUrl: Array.isArray(item.serviceImageUrl) ? item.serviceImageUrl : [item.serviceImageUrl || "/placeholder.svg"],
+            serviceImageUrl: normalizeImageUrl(item.serviceImageUrl),
             serviceTags: item.serviceTags || null,
         })) as Service[];
 
@@ -46,7 +47,7 @@ export async function getServicesByShopId(shopId: string): Promise<Service[]> {
 
     return items.map((item: any) => ({
         ...item,
-        serviceImageUrl: Array.isArray(item.serviceImageUrl) ? item.serviceImageUrl : [item.serviceImageUrl || "/placeholder.svg"],
+        serviceImageUrl: normalizeImageUrl(item.serviceImageUrl),
         serviceTags: item.serviceTags || null,
         serviceReviews: item.serviceReviews || [],
     })) as Service[];

@@ -84,5 +84,16 @@ namespace PetSitter.DataAccess.Repository.Implements
                           .ToListAsync();
 
         }
+
+        public async Task<IEnumerable<Orders>> GetOrdersByUserIdAsync(Guid userId)
+        {
+            return await _context.Orders
+                          .Where(o => o.UserId == userId)
+                          .Include(o => o.OrderItems)
+                          .ThenInclude(oi => oi.Product)
+                          .ThenInclude(p => p.Shop)
+                          .OrderByDescending(o => o.CreatedAt)
+                          .ToListAsync();
+        }
     }
 }

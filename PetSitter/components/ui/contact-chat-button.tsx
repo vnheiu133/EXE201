@@ -33,14 +33,14 @@ export function ContactChatButton({ shopOwnerId, shopName, className }: ContactC
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          participantId: shopOwnerId,
+          shopId: shopOwnerId,
           initialMessage: "Xin chào! Tôi muốn tìm hiểu thêm về dịch vụ chăm sóc thú cưng của cửa hàng.",
         }),
       })
 
       if (response.ok) {
         const result = await response.json()
-        router.push(`/chat?conversation=${result.data.conversationId}`)
+        router.push(`/chat?conversationId=${result.conversationId}`)
       }
     } catch (error) {
     } finally {

@@ -7,6 +7,7 @@ import { Footer } from "@/components/footer"
 import { ConversationList } from "@/components/chat/conversation-list"
 import { ChatWindow } from "@/components/chat/chat-window"
 import { useAuth } from "@/contexts/auth-context"
+import { useChat } from "@/contexts/chat-context"
 import { Card, CardContent } from "@/components/ui/card"
 import { MessageCircle, Heart } from "lucide-react"
 import type { Conversation, Participant } from "@/types/chat"
@@ -28,12 +29,17 @@ const transformApiDataToConversation = (apiData: any[], currentUserId: string | 
       },
       {
         userId: conv.shop.user.userId,
+        shopId: conv.shop.shopId,
         fullName: conv.shop.shopName,
         role: conv.shop.user.role as UserRole,
         profilePictureUrl: conv.shop.shopImageUrl,
-        isOnline: false,
+        isOnline: Boolean(conv.shop.user.isOnline),
+        lastActiveAt: conv.shop.user.lastActiveAt,
       },
     ]
+
+    participants[0].isOnline = Boolean(conv.petOwner.isOnline)
+    participants[0].lastActiveAt = conv.petOwner.lastActiveAt
 
     return {
       conversationId: conv.conversationId,
@@ -49,12 +55,17 @@ const transformApiDataToConversation = (apiData: any[], currentUserId: string | 
 
 export default function ChatPageContent() {
   const { user, token } = useAuth()
+  const { connection } = useChat()
   const searchParams = useSearchParams()
   const router = useRouter()
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const quoteDraft = searchParams.get("quote") || ""
+  const serviceId = searchParams.get("serviceId") || ""
+  const serviceName = searchParams.get("serviceName") || ""
+  const shopName = searchParams.get("shopName") || ""
 
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation)
@@ -85,7 +96,7 @@ export default function ChatPageContent() {
           selected = fetched.find(c => c.conversationId === conversationId)
         } else if (newShopId) {
           const existing = fetched.find(c =>
-            c.participants.some(p => p.userId === newShopId && (p.role === UserRole.Shop || p.role === UserRole.Intermediary))
+            c.participants.some(p => (p.shopId === newShopId || p.userId === newShopId) && (p.role === UserRole.Shop || p.role === UserRole.Intermediary))
           )
 
           if (existing) selected = existing
@@ -101,12 +112,30 @@ export default function ChatPageContent() {
             if (!createRes.ok) throw new Error("Không tạo được cuộc trò chuyện")
 
             const newConv = await createRes.json()
-            router.replace(`/chat?conversationId=${newConv.conversationId}`, { scroll: false })
+            const nextParams = new URLSearchParams()
+            nextParams.set("conversationId", newConv.conversationId)
+            if (quoteDraft) nextParams.set("quote", quoteDraft)
+            if (serviceId) nextParams.set("serviceId", serviceId)
+            if (serviceName) nextParams.set("serviceName", serviceName)
+            if (shopName) nextParams.set("shopName", shopName)
+            router.replace(`/chat?${nextParams.toString()}`, { scroll: false })
             return
           }
         }
 
-        if (selected) setSelectedConversation(selected)
+        if (selected) {
+          setSelectedConversation({
+            ...selected,
+            serviceInfo:
+              serviceId && serviceName && shopName
+                ? {
+                    serviceId,
+                    serviceName,
+                    shopName,
+                  }
+                : selected.serviceInfo,
+          })
+        }
       } catch (err) {
         toast.error("Không tải được cuộc trò chuyện")
       } finally {
@@ -115,7 +144,31 @@ export default function ChatPageContent() {
     }
 
     initializePage()
-  }, [token, user])
+  }, [token, user, quoteDraft, router, searchParams, serviceId, serviceName, shopName])
+
+  useEffect(() => {
+    if (!connection) return
+
+    const handlePresenceChanged = (userId: string, isOnline: boolean, lastActiveAt: string) => {
+      const updateConversation = (conversation: Conversation): Conversation => ({
+        ...conversation,
+        participants: conversation.participants.map((participant) =>
+          participant.userId === userId
+            ? { ...participant, isOnline, lastActiveAt }
+            : participant
+        ),
+      })
+
+      setConversations((current) => current.map(updateConversation))
+      setSelectedConversation((current) => (current ? updateConversation(current) : current))
+    }
+
+    connection.on("UserPresenceChanged", handlePresenceChanged)
+
+    return () => {
+      connection.off("UserPresenceChanged", handlePresenceChanged)
+    }
+  }, [connection])
 
   const conversationIdFromUrl = searchParams.get("conversationId")
 
@@ -165,6 +218,7 @@ export default function ChatPageContent() {
               {selectedConversation ? (
                 <ChatWindow
                   conversation={selectedConversation}
+                  initialDraft={quoteDraft}
                   onBack={() => {
                     setSelectedConversation(null)
                     router.push("/chat", { scroll: false })

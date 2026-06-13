@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/avatar"
+import { formatPresence } from "@/lib/chat-presence"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
@@ -133,6 +134,9 @@ export function ConversationList({ onSelectConversation, selectedConversationId,
                             </Badge>
                           )}
                         </div>
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {formatPresence(otherParticipant)}
+                        </p>
                         {conversation.serviceInfo && (
                           <p className="text-xs text-blue-600 mb-1">📋 {conversation.serviceInfo.serviceName}</p>
                         )}

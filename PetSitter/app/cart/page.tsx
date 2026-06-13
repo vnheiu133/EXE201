@@ -19,14 +19,15 @@ type CartGroup = {
 }
 
 const currency = new Intl.NumberFormat("vi-VN")
+const cartItemId = (productId: number | string) => String(productId)
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity } = useCart()
+  const { cart, removeFromCart, updateQuantity, checkoutStorageKey } = useCart()
   const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   useEffect(() => {
     setSelectedIds((current) => {
-      const cartIds = cart.map((item) => item.productId)
+      const cartIds = cart.map((item) => cartItemId(item.productId))
       if (current.length === 0) return cartIds
       return current.filter((id) => cartIds.includes(id))
     })
@@ -46,19 +47,20 @@ export default function CartPage() {
     }, {})
   }, [cart])
 
-  const selectedItems = cart.filter((item) => selectedIds.includes(item.productId))
+  const selectedItems = cart.filter((item) => selectedIds.includes(cartItemId(item.productId)))
   const selectedTotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const allSelected = cart.length > 0 && selectedIds.length === cart.length
 
-  const setItemSelected = (productId: string, checked: boolean) => {
+  const setItemSelected = (productId: number | string, checked: boolean) => {
+    const id = cartItemId(productId)
     setSelectedIds((current) => {
-      if (checked) return current.includes(productId) ? current : [...current, productId]
-      return current.filter((id) => id !== productId)
+      if (checked) return current.includes(id) ? current : [...current, id]
+      return current.filter((currentId) => currentId !== id)
     })
   }
 
   const setShopSelected = (items: CartItem[], checked: boolean) => {
-    const itemIds = items.map((item) => item.productId)
+    const itemIds = items.map((item) => cartItemId(item.productId))
     setSelectedIds((current) => {
       if (checked) {
         return Array.from(new Set([...current, ...itemIds]))
@@ -68,12 +70,12 @@ export default function CartPage() {
   }
 
   const setAllSelected = (checked: boolean) => {
-    setSelectedIds(checked ? cart.map((item) => item.productId) : [])
+    setSelectedIds(checked ? cart.map((item) => cartItemId(item.productId)) : [])
   }
 
   const handleRemove = (item: CartItem) => {
     removeFromCart(item.productId)
-    setSelectedIds((current) => current.filter((id) => id !== item.productId))
+    setSelectedIds((current) => current.filter((id) => id !== cartItemId(item.productId)))
     toast.error(`${item.productName} đã được xóa khỏi giỏ hàng.`)
   }
 
@@ -83,6 +85,7 @@ export default function CartPage() {
       return
     }
 
+    localStorage.setItem(checkoutStorageKey, JSON.stringify(selectedItems))
     localStorage.setItem("checkoutCartItems", JSON.stringify(selectedItems))
     window.location.href = "/checkout"
   }
@@ -127,7 +130,7 @@ export default function CartPage() {
               </div>
 
               {Object.values(groupedCart).map((group) => {
-                const groupIds = group.items.map((item) => item.productId)
+                const groupIds = group.items.map((item) => cartItemId(item.productId))
                 const checkedCount = groupIds.filter((id) => selectedIds.includes(id)).length
                 const shopChecked = checkedCount === group.items.length
                 const shopIndeterminate = checkedCount > 0 && checkedCount < group.items.length
@@ -156,7 +159,7 @@ export default function CartPage() {
 
                     <div className="divide-y divide-gray-100">
                       {group.items.map((item) => {
-                        const isSelected = selectedIds.includes(item.productId)
+                        const isSelected = selectedIds.includes(cartItemId(item.productId))
 
                         return (
                           <div

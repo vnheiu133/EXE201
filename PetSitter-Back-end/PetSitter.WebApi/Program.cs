@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Net.payOS;
@@ -14,6 +15,7 @@ using System.Text;
 using PetSitter.Models.Enums;
 using PetSitter.Models.Models;
 using PetSitter.Utility;
+using PetSitter.WebApi.Services;
 
 namespace PetSitter.WebApi;
 
@@ -22,6 +24,9 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+        builder.Logging.AddDebug();
 
         IConfiguration configuration = builder.Configuration;
 
@@ -60,6 +65,7 @@ public class Program
 
         builder.Services.AddHttpClient<CountryStateServices>();
         builder.Services.AddSingleton<CloudinaryUploader>();
+        builder.Services.AddSingleton<ChatPresenceService>();
         
         //* Configure routing to use lowercase URLs
         builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
@@ -181,6 +187,15 @@ public class Program
         
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSignalR();
+        var dataProtectionBuilder = builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo(
+                Path.Combine(builder.Environment.ContentRootPath, "DataProtection-Keys")));
+
+        if (OperatingSystem.IsWindows())
+        {
+            dataProtectionBuilder.ProtectKeysWithDpapi();
+        }
+
         var app = builder.Build();
         SeedRoleAccounts(app);
 
@@ -312,6 +327,112 @@ public class Program
             }
         }
 
+        context.SaveChanges();
+
+        // Seed Service Tags
+        var serviceTags = new[]
+        {
+            new ServiceTags { ServiceTagId = Guid.NewGuid(), TagName = "Dắt chó đi dạo" },
+            new ServiceTags { ServiceTagId = Guid.NewGuid(), TagName = "Tắm & Grooming" },
+            new ServiceTags { ServiceTagId = Guid.NewGuid(), TagName = "Trông giữ thú cưng" },
+            new ServiceTags { ServiceTagId = Guid.NewGuid(), TagName = "Huấn luyện thú cưng" }
+        };
+
+        foreach (var tag in serviceTags)
+        {
+            if (!context.ServiceTags.Any(x => x.TagName == tag.TagName))
+            {
+                context.ServiceTags.Add(tag);
+            }
+        }
+        context.SaveChanges();
+
+        // Seed Services for all shops
+        var shops = context.Shops.ToList();
+        foreach (var shop in shops)
+        {
+            shop.Location = "Đà Nẵng";
+            if (!shop.Address.Contains("Đà Nẵng") && !shop.Address.Contains("Da Nang"))
+            {
+                shop.Address = "Đà Nẵng, Việt Nam";
+            }
+        }
+        context.SaveChanges();
+
+        var groomTag = context.ServiceTags.FirstOrDefault(x => x.TagName == "Tắm & Grooming");
+        var walkTag = context.ServiceTags.FirstOrDefault(x => x.TagName == "Dắt chó đi dạo");
+        var sitTag = context.ServiceTags.FirstOrDefault(x => x.TagName == "Trông giữ thú cưng");
+        var trainTag = context.ServiceTags.FirstOrDefault(x => x.TagName == "Huấn luyện thú cưng");
+
+        foreach (var shop in shops)
+        {
+            var servicesToSeed = new List<PetSitter.Models.Models.Services>();
+
+            if (groomTag != null && !context.Services.Any(x => x.ShopId == shop.ShopId && x.TagId == groomTag.ServiceTagId))
+            {
+                servicesToSeed.Add(new PetSitter.Models.Models.Services
+                {
+                    ServiceId = Guid.NewGuid(),
+                    ShopId = shop.ShopId,
+                    TagId = groomTag.ServiceTagId,
+                    ServiceName = $"Dịch vụ Tắm & Chải lông - {shop.ShopName}",
+                    PricePerPerson = 15,
+                    Description = "Gói tắm dưỡng lông, sấy khô, chải tơi, cắt tỉa móng và vệ sinh tai sạch sẽ cho các bé thú cưng.",
+                    ServiceImageUrl = "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?q=80&w=600&auto=format&fit=crop",
+                    CreatedAt = now
+                });
+            }
+
+            if (walkTag != null && !context.Services.Any(x => x.ShopId == shop.ShopId && x.TagId == walkTag.ServiceTagId))
+            {
+                servicesToSeed.Add(new PetSitter.Models.Models.Services
+                {
+                    ServiceId = Guid.NewGuid(),
+                    ShopId = shop.ShopId,
+                    TagId = walkTag.ServiceTagId,
+                    ServiceName = $"Dịch vụ Dắt chó đi dạo - {shop.ShopName}",
+                    PricePerPerson = 8,
+                    Description = "Giải phóng năng lượng cho cún cưng với 45-60 phút đi dạo ngoài trời cùng bảo mẫu thân thiện.",
+                    ServiceImageUrl = "https://images.unsplash.com/photo-1596492784531-6e6eb5ea9993?q=80&w=600&auto=format&fit=crop",
+                    CreatedAt = now
+                });
+            }
+
+            if (sitTag != null && !context.Services.Any(x => x.ShopId == shop.ShopId && x.TagId == sitTag.ServiceTagId))
+            {
+                servicesToSeed.Add(new PetSitter.Models.Models.Services
+                {
+                    ServiceId = Guid.NewGuid(),
+                    ShopId = shop.ShopId,
+                    TagId = sitTag.ServiceTagId,
+                    ServiceName = $"Trông giữ thú cưng tại nhà - {shop.ShopName}",
+                    PricePerPerson = 25,
+                    Description = "Dịch vụ trông giữ thú cưng ngày đêm ấm áp như ở nhà. Được cho ăn đầy đủ, vui chơi tự do và cập nhật tình hình qua video thường xuyên.",
+                    ServiceImageUrl = "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=600&auto=format&fit=crop",
+                    CreatedAt = now
+                });
+            }
+
+            if (trainTag != null && !context.Services.Any(x => x.ShopId == shop.ShopId && x.TagId == trainTag.ServiceTagId))
+            {
+                servicesToSeed.Add(new PetSitter.Models.Models.Services
+                {
+                    ServiceId = Guid.NewGuid(),
+                    ShopId = shop.ShopId,
+                    TagId = trainTag.ServiceTagId,
+                    ServiceName = $"Huấn luyện cún cưng cơ bản - {shop.ShopName}",
+                    PricePerPerson = 45,
+                    Description = "Khóa học rèn luyện thói quen đi vệ sinh đúng chỗ, nghe lời chủ và các lệnh cơ bản như ngồi, nằm, đứng.",
+                    ServiceImageUrl = "https://images.unsplash.com/photo-1537151608828-ea2b117b6281?q=80&w=600&auto=format&fit=crop",
+                    CreatedAt = now
+                });
+            }
+
+            if (servicesToSeed.Count > 0)
+            {
+                context.Services.AddRange(servicesToSeed);
+            }
+        }
         context.SaveChanges();
     }
 }

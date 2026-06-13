@@ -13,5 +13,6 @@ namespace PetSitter.DataAccess.Repository.Interfaces
         Task<IEnumerable<Conversation>> GetConversationsByUserIdAsync(Guid userId);
         Task<IEnumerable<Message>> GetMessagesByConversationIdAsync(Guid conversationId);
         Task<Conversation> GetConversationByIdAsync(Guid conversationId);
+        Task TouchUserActivityAsync(Guid userId);
     }
 }

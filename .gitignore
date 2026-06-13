@@ -14,3 +14,6 @@ PetSitter/.next/
 PetSitter/.next-build/
 PetSitter/test-results/
 PetSitter-Back-end/publish/
+
+# ASP.NET runtime keys
+PetSitter-Back-end/PetSitter.WebApi/DataProtection-Keys/

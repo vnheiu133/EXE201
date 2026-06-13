@@ -26,9 +26,11 @@ export interface Conversation {
 
 export interface Participant {
   userId: string
+  shopId?: string
   fullName: string
   role: UserRole;
   profilePictureUrl?: string
   isOnline: boolean
+  lastActiveAt?: string
 }
 

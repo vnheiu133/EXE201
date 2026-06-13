@@ -35,7 +35,7 @@ export function ContactButton({ shopId, serviceId, serviceName, shopName, classN
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          participantId: shopId,
+          shopId: shopId,
           serviceId: serviceId,
           serviceName: serviceName,
           shopName: shopName,
@@ -44,10 +44,10 @@ export function ContactButton({ shopId, serviceId, serviceName, shopName, classN
 
       if (response.ok) {
         const data = await response.json()
-        const conversationId = data.data.conversationId
+        const conversationId = data.conversationId
 
         // Redirect to chat page with the conversation
-        router.push(`/chat?conversation=${conversationId}`)
+        router.push(`/chat?conversationId=${conversationId}`)
       } else {
       }
     } catch (error) {    } finally {

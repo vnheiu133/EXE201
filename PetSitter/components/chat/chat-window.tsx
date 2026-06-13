@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/avatar"
+import { formatPresence } from "@/lib/chat-presence"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Send, Phone, Video, MoreVertical, ArrowLeft, Heart, Star } from "lucide-react"
@@ -19,9 +20,10 @@ import { vi } from "date-fns/locale"
 interface ChatWindowProps {
   conversation: Conversation
   onBack?: () => void
+  initialDraft?: string
 }
 
-export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
+export function ChatWindow({ conversation, onBack, initialDraft }: ChatWindowProps) {
   const { user, token } = useAuth()
   const { connection, sendMessage, joinConversation, leaveConversation, userStartedTyping, userStoppedTyping } = useChat();
   const [messages, setMessages] = useState<Message[]>([])
@@ -32,6 +34,12 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hasScrolledInitial, setHasScrolledInitial] = useState(false); // Thêm state mới
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialDraft) {
+      setNewMessage((current) => current || initialDraft);
+    }
+  }, [conversation.conversationId, initialDraft]);
 
   // Effect MỚI để xử lý việc cuộn
   useEffect(() => {
@@ -180,10 +188,10 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
               {otherParticipant?.isOnline ? (
                 <span className="flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                  Đang online
+                  {formatPresence(otherParticipant)}
                 </span>
               ) : (
-                "Đang offline"
+                formatPresence(otherParticipant)
               )}
             </p>
           </div>

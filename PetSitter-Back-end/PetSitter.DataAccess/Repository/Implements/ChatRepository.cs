@@ -47,6 +47,7 @@ namespace PetSitter.DataAccess.Repository.Implements
             };
 
             await _context.Messages.AddAsync(message);
+            await TouchUserActivityAsync(senderId, false);
             await _context.SaveChangesAsync();
 
             return message;
@@ -77,20 +78,38 @@ namespace PetSitter.DataAccess.Repository.Implements
                     {
                         UserId = x.PetOwner.UserId,
                         FullName = x.PetOwner.FullName,
-                        ProfilePictureUrl = x.PetOwner.ProfilePictureUrl
+                        ProfilePictureUrl = x.PetOwner.ProfilePictureUrl,
+                        Role = x.PetOwner.Role,
+                        UpdatedAt = x.PetOwner.UpdatedAt
                     },
                     Shop = new Shops
                     {
                         ShopId = x.Shop.ShopId,
                         ShopName = x.Shop.ShopName,
                         UserId = x.Shop.UserId,
+                        ShopImageUrl = x.Shop.ShopImageUrl,
                         User = new Users
                         {
                             UserId = x.Shop.User.UserId,
                             FullName = x.Shop.User.FullName,
-                            ProfilePictureUrl = x.Shop.User.ProfilePictureUrl
+                            ProfilePictureUrl = x.Shop.User.ProfilePictureUrl,
+                            Role = x.Shop.User.Role,
+                            UpdatedAt = x.Shop.User.UpdatedAt
                         }
-                    }
+                    },
+                    Messages = x.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .Take(1)
+                        .Select(m => new Message
+                        {
+                            MessageId = m.MessageId,
+                            ConversationId = m.ConversationId,
+                            SenderId = m.SenderId,
+                            Content = m.Content,
+                            SentAt = m.SentAt,
+                            IsRead = m.IsRead
+                        })
+                        .ToList()
                 }).ToListAsync();
 
             // Dựa trên các IDs đó, truy vấn lại để lấy đầy đủ thông tin
@@ -118,22 +137,58 @@ namespace PetSitter.DataAccess.Repository.Implements
                     {
                         UserId = x.PetOwner.UserId,
                         FullName = x.PetOwner.FullName,
-                        ProfilePictureUrl = x.PetOwner.ProfilePictureUrl
+                        ProfilePictureUrl = x.PetOwner.ProfilePictureUrl,
+                        Role = x.PetOwner.Role,
+                        UpdatedAt = x.PetOwner.UpdatedAt
                     },
                     Shop = new Shops
                     {
                         ShopId = x.Shop.ShopId,
                         ShopName = x.Shop.ShopName,
                         UserId = x.Shop.UserId,
+                        ShopImageUrl = x.Shop.ShopImageUrl,
                         User = new Users
                         {
                             UserId = x.Shop.User.UserId,
                             FullName = x.Shop.User.FullName,
-                            ProfilePictureUrl = x.Shop.User.ProfilePictureUrl
+                            ProfilePictureUrl = x.Shop.User.ProfilePictureUrl,
+                            Role = x.Shop.User.Role,
+                            UpdatedAt = x.Shop.User.UpdatedAt
                         }
-                    }
+                    },
+                    Messages = x.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .Take(1)
+                        .Select(m => new Message
+                        {
+                            MessageId = m.MessageId,
+                            ConversationId = m.ConversationId,
+                            SenderId = m.SenderId,
+                            Content = m.Content,
+                            SentAt = m.SentAt,
+                            IsRead = m.IsRead
+                        })
+                        .ToList()
                 }).FirstOrDefaultAsync(x => x.ConversationId == conversationId);
             return conversation!;
+        }
+
+        public async Task TouchUserActivityAsync(Guid userId)
+        {
+            await TouchUserActivityAsync(userId, true);
+        }
+
+        private async Task TouchUserActivityAsync(Guid userId, bool saveChanges)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (user == null) return;
+
+            user.UpdatedAt = DateTime.UtcNow;
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

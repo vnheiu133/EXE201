@@ -22,6 +22,7 @@ interface OrderItem {
 }
 
 interface OrderGroup {
+  orderId?: string;
   shopId: string;
   shopName: string;
   totalAmount: number;
@@ -30,6 +31,7 @@ interface OrderGroup {
   statusText: string;
   shippingProgressText?: string;
   expectedDelivery: string;
+  shippingAddress?: string;
   isMall?: boolean;
 }
 
@@ -125,11 +127,21 @@ export default function OrdersPage() {
         if (res.ok) {
           const apiData = await res.json();
           // Map apiData to our format
-          const mappedOrders = apiData.map((order: any) => ({
+          const mappedOrders = apiData.map((order: any) => {
+            const normalizedStatus = String(order.status || "").toLowerCase();
+            const status: OrderGroup["status"] =
+              normalizedStatus === "completed"
+                ? "completed"
+                : normalizedStatus === "cancelled"
+                  ? "cancelled"
+                  : "pending";
+
+            return {
+            orderId: order.orderId,
             shopId: order.shopId,
             shopName: order.shopName,
             isMall: true,
-            status: "shipping", // default status
+            status,
             statusText: "ĐANG VẬN CHUYỂN",
             expectedDelivery: "Dự kiến nhận hàng sau 3 ngày",
             totalAmount: order.totalAmount,
@@ -142,17 +154,18 @@ export default function OrdersPage() {
               price: item.price,
               variant: "Tiêu chuẩn",
             })),
-          }));
+            };
+          });
 
           // Merge API orders with our gorgeous mock orders for demonstration
-          setOrders([...mappedOrders, ...mockOrders]);
+          setOrders(mappedOrders);
         } else {
           // If no orders or failed, fall back to showcase mock orders
-          setOrders(mockOrders);
+          setOrders([]);
         }
       } catch (err) {
         console.warn("Không tải được đơn hàng từ API, đang dùng dữ liệu mẫu.", err);
-        setOrders(mockOrders);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
@@ -191,7 +204,7 @@ export default function OrdersPage() {
   };
 
   const getStatusTextVi = (status: string, statusText: string) => {
-    const lower = (statusText || status || "").toLowerCase();
+    const lower = (status || statusText || "").toLowerCase();
     if (lower === "shipping") return "ĐANG VẬN CHUYỂN";
     if (lower === "pending") return "CHỜ THANH TOÁN";
     if (lower === "completed") return "ĐÃ HOÀN THÀNH";

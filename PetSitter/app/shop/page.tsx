@@ -139,6 +139,14 @@ function ShopPageContent() {
     window.scrollTo({ top: 520, behavior: "smooth" })
   }
 
+  const cacheServiceForDetail = (service: Service) => {
+    try {
+      sessionStorage.setItem(`service:${service.serviceId}`, JSON.stringify(service))
+    } catch {
+      // Browsers can block storage; the detail page will still fetch normally.
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -343,7 +351,12 @@ function ShopPageContent() {
                               </span>
                             </div>
                             <Button asChild className="bg-[#e15c45] text-white hover:bg-[#c94c37]">
-                              <Link href={`/features/booking/${service.serviceId}`}>Xem chi tiết</Link>
+                              <Link
+                                href={`/features/booking/${service.serviceId}`}
+                                onClick={() => cacheServiceForDetail(service)}
+                              >
+                                Xem chi tiết
+                              </Link>
                             </Button>
                           </div>
                         </div>
