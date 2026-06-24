@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using PetSitter.DataAccess.Repository.Interfaces;
 using PetSitter.Models.Models;
 using PetSitter.Models.Request;
@@ -11,10 +12,12 @@ namespace PetSitter.WebApi.Controller;
 public class ServiceController : ControllerBase
 {
     private readonly IServiceRepository _serviceRepository;
+    private readonly IHubContext<NotificationHub> _notificationHub;
     
-    public ServiceController(IServiceRepository serviceRepository)
+    public ServiceController(IServiceRepository serviceRepository, IHubContext<NotificationHub> notificationHub)
     {
         _serviceRepository = serviceRepository;
+        _notificationHub = notificationHub;
     }
 
     [HttpGet("list-services")]
@@ -105,6 +108,14 @@ public class ServiceController : ControllerBase
             response.Success = true;
             response.Message = "Write review successful";
             response.Data = review;
+            await _notificationHub.Clients.All.SendAsync("ReceiveNotification", new
+            {
+                Type = "service-review",
+                Title = "Đánh giá dịch vụ mới",
+                Message = $"Một khách hàng vừa đánh giá {review.Rating}/5 sao cho dịch vụ.",
+                ActorName = "Khách hàng",
+                CreatedAt = DateTime.UtcNow.ToString("o")
+            });
         }
         catch (Exception ex)
         {

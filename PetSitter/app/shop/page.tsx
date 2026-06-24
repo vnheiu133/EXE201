@@ -298,9 +298,9 @@ function ShopPageContent() {
                         ? service.serviceReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
                         : 0
                     const serviceImage =
-                      Array.isArray(service.serviceImageUrl) && service.serviceImageUrl[0]
-                        ? service.serviceImageUrl[0]
-                        : "/placeholder.svg"
+                      Array.isArray(service.serviceImageUrl)
+                        ? (service.serviceImageUrl[0] || "/placeholder.svg")
+                        : (service.serviceImageUrl || "/placeholder.svg")
 
                     return (
                       <div
@@ -330,7 +330,7 @@ function ShopPageContent() {
                               <p className="text-lg font-semibold text-[#b44735]">
                                 {new Intl.NumberFormat("vi-VN").format(service.pricePerPerson)} đ
                               </p>
-                              <p className="text-sm text-[#687d76]">/ người</p>
+                              <p className="text-sm text-[#687d76]">/ thú cưng</p>
                             </div>
                           </div>
                           <p className="mb-5 line-clamp-3 text-[#526761]">{service.description}</p>

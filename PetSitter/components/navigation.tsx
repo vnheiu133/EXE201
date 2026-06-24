@@ -31,6 +31,27 @@ const navLinks = [
   { href: "/contact", label: "Liên hệ" },
 ]
 
+type AuthUser = NonNullable<ReturnType<typeof useAuth>["user"]>
+
+function UserSummaryPill({ user }: { user: AuthUser }) {
+  return (
+    <div className="hidden min-w-0 items-center gap-2 rounded-full border border-[#d9e4dd]/70 bg-white/70 px-2.5 py-1.5 text-left shadow-sm backdrop-blur-sm lg:flex">
+      <Avatar className="size-8 ring-1 ring-[#1f6654]/10">
+        <AvatarImage src={getAvatarUrl(user.profilePictureUrl)} alt={user.fullName} className="object-cover" />
+        <AvatarFallback>
+          <img src="/placeholder-user.jpg" alt={user.fullName} className="h-full w-full object-cover" />
+        </AvatarFallback>
+      </Avatar>
+      <span className="min-w-0">
+        <span className="block max-w-36 truncate text-sm font-semibold leading-4 text-[#16312a]">{user.fullName}</span>
+        <span className="block max-w-36 truncate text-xs font-medium leading-4 text-[#526761]">
+          {user.phoneNumber || "Chưa cập nhật SĐT"}
+        </span>
+      </span>
+    </div>
+  )
+}
+
 export function Navigation() {
   const { user, logout } = useAuth()
   const { cart } = useCart()
@@ -58,6 +79,19 @@ export function Navigation() {
           <span className="truncate text-xl font-bold tracking-tight text-[#16312a] transition-colors duration-300 group-hover:text-[#1f6654]">PetSitter</span>
         </Link>
 
+        {user ? (
+          <UserSummaryPill user={user} />
+        ) : (
+          <a
+            href="tel:+84901135618"
+            className="group hidden items-center gap-2 rounded-full border border-[#d9e4dd]/70 bg-white/70 px-3 py-1.5 text-sm font-semibold text-[#526761] shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-[#e15c45]/30 hover:bg-white hover:text-[#16312a] hover:shadow-md sm:flex"
+          >
+            <Phone className="size-4 text-[#b44735] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" />
+            <span className="text-xs uppercase tracking-wide text-[#b44735]">Hotline</span>
+            <span>(+84) 901 135 618</span>
+          </a>
+        )}
+
         <div className="hidden items-center gap-1 md:flex">
           {navLinks.map((link) => (
             <Link
@@ -75,14 +109,6 @@ export function Navigation() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <a
-            href="tel:+84901135618"
-            className="group hidden items-center gap-2 rounded-full border border-[#d9e4dd]/50 bg-white/40 px-3 py-1.5 text-sm font-medium text-[#526761] shadow-xs backdrop-blur-xs transition-all duration-300 hover:border-[#e15c45]/30 hover:bg-white hover:text-[#16312a] hover:shadow-sm xl:flex"
-          >
-            <Phone className="size-4 text-[#b44735] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" />
-            <span>(+84) 901 135 618</span>
-          </a>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden" aria-label="Mở điều hướng">
@@ -153,7 +179,7 @@ export function Navigation() {
               <DropdownMenuContent className="w-60" align="end" forceMount>
                 <div className="p-2">
                   <p className="truncate font-semibold text-[#16312a]">{user.fullName}</p>
-                  <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+                  <p className="truncate text-sm text-muted-foreground">{user.phoneNumber || "Chưa cập nhật SĐT"}</p>
                 </div>
                 <DropdownMenuItem asChild>
                   <Link href="/profile">

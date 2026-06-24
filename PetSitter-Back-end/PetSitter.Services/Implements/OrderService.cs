@@ -73,7 +73,8 @@ namespace PetSitter.Services.Implements
                 {
                     ProductId = product.ProductId,
                     Quantity = cartItem.Quantity,
-                    Price = product.Price
+                    Price = product.Price,
+                    SelectedVariant = cartItem.SelectedVariant
                 });
 
                 var payOsItemName = product.ProductName.Length > 25

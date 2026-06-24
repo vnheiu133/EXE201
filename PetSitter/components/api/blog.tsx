@@ -1,6 +1,8 @@
 import type { Blog, BlogTag, BlogDetailDTO } from "@/types/blog";
 import { ApiResponse } from "./response";
 
+const FALLBACK_BLOG_DATE = "2024-04-01T00:00:00.000Z";
+
 function normalizeBlogDetail(data: any): BlogDetailDTO {
   const author = data?.author || data?.users || {};
   const tag = data?.blogTag || {};
@@ -14,7 +16,7 @@ function normalizeBlogDetail(data: any): BlogDetailDTO {
     viewCount: data?.viewCount || 0,
     likeCount: data?.likeCount || 0,
     hasUserLiked: Boolean(data?.hasUserLiked),
-    createdAt: data?.createdAt || new Date().toISOString(),
+    createdAt: data?.createdAt || FALLBACK_BLOG_DATE,
     authorId: data?.authorId || author?.userId || "",
     authorName: data?.authorName || author?.fullName || "PetSitter Team",
     authorAvatar: data?.authorAvatar || author?.profilePictureUrl || "/placeholder-user.jpg",

@@ -367,9 +367,9 @@ export default function DashboardPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   {services.map((service) => {
                     const serviceImage =
-                      Array.isArray(service.serviceImageUrl) && service.serviceImageUrl[0]
-                        ? service.serviceImageUrl[0]
-                        : "/placeholder.svg";
+                      Array.isArray(service.serviceImageUrl)
+                        ? (service.serviceImageUrl[0] || "/placeholder.svg")
+                        : (service.serviceImageUrl || "/placeholder.svg");
 
                     return (
                       <div key={service.serviceId} className="flex gap-3 rounded-lg border bg-white p-3">

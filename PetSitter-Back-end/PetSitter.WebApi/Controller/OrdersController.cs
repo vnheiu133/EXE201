@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using PetSitter.DataAccess.Repository.Interfaces;
 using PetSitter.Models.DTO;
 using PetSitter.Services.Interfaces;
@@ -16,11 +17,13 @@ namespace PetSitter.WebApi.Controller
     {
         private readonly IOrderService _orderService;
         private readonly IOrderRepository _orderRepository;
+        private readonly IHubContext<NotificationHub> _notificationHub;
 
-        public OrdersController(IOrderService orderService, IOrderRepository orderRepository)
+        public OrdersController(IOrderService orderService, IOrderRepository orderRepository, IHubContext<NotificationHub> notificationHub)
         {
             _orderService = orderService;
             _orderRepository = orderRepository;
+            _notificationHub = notificationHub;
         }
 
         [HttpPost("checkout")]
@@ -40,6 +43,7 @@ namespace PetSitter.WebApi.Controller
                     paymentMethod.Equals("ThanhToanKhiNhanHang", StringComparison.OrdinalIgnoreCase))
                 {
                     var order = await _orderService.CreateCashOnDeliveryOrder(checkoutRequest, userId);
+                    await BroadcastOrderNotification(checkoutRequest.FullName, order.TotalAmount);
                     return Ok(new
                     {
                         success = true,
@@ -55,6 +59,8 @@ namespace PetSitter.WebApi.Controller
                 {
                     return BadRequest(new { message = "Could not create payment link." });
                 }
+
+                await BroadcastOrderNotification(checkoutRequest.FullName, 0);
 
                 // Trả về toàn bộ object hoặc chỉ checkoutUrl tùy theo nhu cầu của frontend
                 return Ok(paymentLinkInfo);
@@ -132,6 +138,7 @@ namespace PetSitter.WebApi.Controller
                             ProductName = x.OrderItem.Product.ProductName,
                             Quantity = x.OrderItem.Quantity,
                             Price = x.OrderItem.Price,
+                            SelectedVariant = x.OrderItem.SelectedVariant
                         }).ToList()
                     });
 
@@ -143,6 +150,21 @@ namespace PetSitter.WebApi.Controller
             }
 
 
+        }
+
+        private async Task BroadcastOrderNotification(string fullName, decimal totalAmount)
+        {
+            var actorName = string.IsNullOrWhiteSpace(fullName) ? "Một khách hàng" : fullName.Trim();
+            var amountText = totalAmount > 0 ? $" với tổng tiền {totalAmount:N0} đ" : string.Empty;
+
+            await _notificationHub.Clients.All.SendAsync("ReceiveNotification", new
+            {
+                Type = "order-created",
+                Title = "Đơn hàng mới",
+                Message = $"{actorName} vừa đặt hàng thành công{amountText}.",
+                ActorName = actorName,
+                CreatedAt = DateTime.UtcNow.ToString("o")
+            });
         }
     }
 }

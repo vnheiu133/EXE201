@@ -23,7 +23,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/auth-context";
+import { useNotifications } from "@/contexts/notification-context";
 import { DEFAULT_SHOP_AVATAR, getAvatarUrl } from "@/lib/avatar";
 import type { Service } from "@/types/feature";
 
@@ -130,7 +133,64 @@ export default function BookingPage() {
   const params = useParams();
   const serviceId = params.id as string;
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const { announceServiceBooking } = useNotifications();
+
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingNote, setBookingNote] = useState("");
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  const handleCreateBooking = async () => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để đặt lịch dịch vụ.");
+      router.push("/login");
+      return;
+    }
+
+    if (!bookingDate) {
+      toast.error("Vui lòng chọn ngày và giờ đặt lịch.");
+      return;
+    }
+
+    const selectedDate = new Date(bookingDate);
+    const now = new Date();
+    if (selectedDate <= now) {
+      toast.error("Lịch đặt dịch vụ phải ở thời gian tương lai.");
+      return;
+    }
+
+    setBookingLoading(true);
+    try {
+      const res = await fetch("/api/booking/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          serviceId: service?.serviceId,
+          bookingDate: new Date(bookingDate).toISOString(),
+          note: bookingNote.trim(),
+        }),
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.message || "Đặt lịch thất bại.");
+      }
+
+      toast.success("Đặt lịch dịch vụ thành công!");
+      setBookingOpen(false);
+      setBookingDate("");
+      setBookingNote("");
+      router.push("/orders?tab=bookings");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Đặt lịch thất bại.");
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
@@ -205,6 +265,7 @@ export default function BookingPage() {
       quote: `Xin chào ${service.shop.shopName || "shop"}, mình muốn nhận báo giá cho dịch vụ "${service.serviceName}". Shop tư vấn giúp mình về giá, lịch trống và các lưu ý khi đặt lịch nhé.`,
     });
 
+    announceServiceBooking(service.serviceName, service.shop.shopName || "Shop dịch vụ").catch(() => undefined);
     router.push(`/chat?${params.toString()}`);
   };
 
@@ -298,9 +359,12 @@ export default function BookingPage() {
                   <div className="rounded-lg bg-[#f7faf7] p-4 text-center">
                     <p className="text-xs font-bold uppercase tracking-wide text-[#687d76]">Giá tham khảo</p>
                     {service.pricePerPerson > 0 ? (
-                      <p className="mt-1 text-3xl font-extrabold text-[#b44735]">
-                        {new Intl.NumberFormat("vi-VN").format(service.pricePerPerson)} đ
-                      </p>
+                      <>
+                        <p className="mt-1 text-3xl font-extrabold text-[#b44735]">
+                          {new Intl.NumberFormat("vi-VN").format(service.pricePerPerson)} đ
+                        </p>
+                        <p className="text-xs text-[#687d76] font-medium mt-0.5">/ thú cưng</p>
+                      </>
                     ) : (
                       <p className="mt-1 text-lg font-bold text-[#b44735]">Liên hệ shop để nhận giá</p>
                     )}
@@ -308,6 +372,17 @@ export default function BookingPage() {
                   <Button className="mt-4 w-full bg-[#b44735] hover:bg-[#9c3828]" onClick={handleQuoteChat}>
                     <MessageCircle className="mr-2 size-4" />
                     Nhận báo giá qua chat
+                  </Button>
+                  <Button className="mt-2 w-full bg-[#1f6654] hover:bg-[#174d3f] text-white" onClick={() => {
+                    if (!user) {
+                      toast.error("Vui lòng đăng nhập để đặt lịch dịch vụ.");
+                      router.push("/login");
+                      return;
+                    }
+                    setBookingOpen(true);
+                  }}>
+                    <CalendarCheck className="mr-2 size-4" />
+                    Đặt lịch dịch vụ ngay
                   </Button>
                   {service.shop?.socialMediaLinks && (
                     <Button asChild variant="outline" className="mt-2 w-full">
@@ -426,6 +501,17 @@ export default function BookingPage() {
                   <MessageCircle className="mr-2 size-4" />
                   Báo giá qua chat
                 </Button>
+                <Button className="mt-2 w-full bg-[#1f6654] hover:bg-[#174d3f] text-white" onClick={() => {
+                  if (!user) {
+                    toast.error("Vui lòng đăng nhập để đặt lịch dịch vụ.");
+                    router.push("/login");
+                    return;
+                  }
+                  setBookingOpen(true);
+                }}>
+                  <CalendarCheck className="mr-2 size-4" />
+                  Đặt lịch dịch vụ ngay
+                </Button>
                 <div className="mt-5 space-y-3 text-sm text-[#526761]">
                   <div className="flex items-center gap-3">
                     <Phone className="size-4 text-[#1f6654]" />
@@ -444,6 +530,78 @@ export default function BookingPage() {
             </Card>
           </aside>
         </section>
+
+        <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#16312a]">Đặt lịch dịch vụ</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="rounded-lg bg-[#f7faf7] p-4 text-[#23443b]">
+                <p className="font-semibold">{service.serviceName}</p>
+                <p className="text-sm text-gray-500 mt-1">Cửa hàng: {service.shop?.shopName}</p>
+                {service.pricePerPerson > 0 ? (
+                  <>
+                    <p className="text-base font-bold text-[#b44735] mt-2">
+                      Giá: {new Intl.NumberFormat("vi-VN").format(service.pricePerPerson)} đ
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">/ thú cưng</p>
+                  </>
+                ) : (
+                  <p className="text-base font-bold text-[#b44735] mt-2">Giá liên hệ</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="booking-date" className="text-sm font-semibold text-gray-700">Ngày & Giờ đặt lịch *</Label>
+                <Input
+                  id="booking-date"
+                  type="datetime-local"
+                  value={bookingDate}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setBookingDate(val);
+                    // Real-time validation: clear if past time selected
+                    if (val) {
+                      const selected = new Date(val);
+                      if (selected <= new Date()) {
+                        toast.warning("Vui lòng chọn thời gian trong tương lai.");
+                      }
+                    }
+                  }}
+                  className="w-full text-black bg-white"
+                  min={(() => {
+                    // Get current local datetime in format YYYY-MM-DDTHH:mm
+                    // Add 1 minute buffer so "now" is always invalid
+                    const d = new Date(Date.now() + 60000);
+                    const pad = (n: number) => String(n).padStart(2, '0');
+                    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                  })()}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="booking-note" className="text-sm font-semibold text-gray-700">Ghi chú cho cửa hàng</Label>
+                <Textarea
+                  id="booking-note"
+                  placeholder="Ví dụ: Giống cún nhà mình là Corgi, nặng 10kg..."
+                  value={bookingNote}
+                  onChange={(e) => setBookingNote(e.target.value)}
+                  className="min-h-24"
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setBookingOpen(false)} disabled={bookingLoading}>
+                Hủy
+              </Button>
+              <Button onClick={handleCreateBooking} disabled={bookingLoading} className="bg-[#1f6654] hover:bg-[#174d3f] text-white">
+                {bookingLoading ? "Đang xử lý..." : "Xác nhận đặt lịch"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </>

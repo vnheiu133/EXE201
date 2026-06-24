@@ -129,6 +129,7 @@ const toneClassName: Record<string, string> = {
 }
 
 const statusColors = ["#1f6654", "#f59e0b", "#dc2626"]
+const DASHBOARD_DATE_LABEL = "Thứ bảy, 13 tháng 6, 2026"
 
 export default function IntermediaryDashboard() {
   const [data, setData] = useState<IntermediaryDashboardData | null>(null)
@@ -748,7 +749,7 @@ export default function IntermediaryDashboard() {
 
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-xs font-semibold text-slate-700">{new Date().toLocaleDateString("vi-VN", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p className="text-xs font-semibold text-slate-700">{DASHBOARD_DATE_LABEL}</p>
               <p className="text-[10px] font-medium text-slate-400">Hà Nội, Việt Nam</p>
             </div>
             

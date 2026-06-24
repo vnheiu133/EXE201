@@ -91,7 +91,7 @@ export default function CheckoutPage() {
   }, [states, user?.address]);
 
   const finishLocalOrder = () => {
-    removeItemsFromCart(checkoutItems.map((item) => item.productId));
+    removeItemsFromCart(checkoutItems.map((item) => item.selectedVariant ? `${item.productId}_${item.selectedVariant}` : String(item.productId)));
     getCheckoutStorageKeys(checkoutStorageKey).forEach((key) => localStorage.removeItem(key));
     toast.success("Đặt hàng thành công. Bạn sẽ thanh toán khi nhận hàng.");
     router.push("/orders");
@@ -132,6 +132,7 @@ export default function CheckoutPage() {
           cartItems: checkoutItems.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
+            selectedVariant: item.selectedVariant,
           })),
         }),
       });
@@ -251,18 +252,25 @@ export default function CheckoutPage() {
             <h2 className="mb-4 text-xl font-bold text-[#16312a]">Đơn hàng của bạn</h2>
             <div className="mb-4 space-y-3 border-b border-[#e0e8e2] pb-4">
               {checkoutItems.map((item) => (
-                <div key={item.productId} className="flex items-center justify-between gap-3 text-sm">
-                  <div className="flex min-w-0 items-center">
-                    <img
-                      src={item.productImageUrl || "/placeholder.svg"}
-                      alt={item.productName}
-                      className="mr-3 h-10 w-10 shrink-0 rounded object-cover"
-                    />
-                    <span className="min-w-0 truncate">
-                      {item.productName} <span className="text-gray-500">x {item.quantity}</span>
-                    </span>
+                <div key={`${item.productId}_${item.selectedVariant || ""}`} className="flex flex-col gap-1 border-b border-gray-100 last:border-0 pb-3 last:pb-0">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <div className="flex min-w-0 items-center">
+                      <img
+                        src={item.productImageUrl || "/placeholder.svg"}
+                        alt={item.productName}
+                        className="mr-3 h-10 w-10 shrink-0 rounded object-cover"
+                      />
+                      <span className="min-w-0 truncate font-medium">
+                        {item.productName} <span className="text-gray-500">x {item.quantity}</span>
+                      </span>
+                    </div>
+                    <span className="shrink-0 font-medium">{currency.format(item.price * item.quantity)} đ</span>
                   </div>
-                  <span className="shrink-0 font-medium">{currency.format(item.price * item.quantity)} đ</span>
+                  {item.selectedVariant && (
+                    <p className="ml-13 text-xs text-[#a23820] font-semibold bg-[#a23820]/5 px-2 py-0.5 rounded-sm w-fit border border-[#a23820]/10">
+                      Phân loại: {item.selectedVariant}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

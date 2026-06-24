@@ -58,7 +58,7 @@ export async function getProductById(id: string): Promise<Product> {
         productId: item.productId,
         productName: item.productName,
         price: item.price,
-        productImageUrl: item.productImageUrl,
+        productImageUrl: safeImage(item.productImageUrl),
         categoryName: item.category?.categoryName ?? "",
         brandName: item.brand?.brandName ?? "",
         tags: Array.isArray(item.tags)
@@ -91,7 +91,7 @@ export async function getRelatedProduct(id: string): Promise<Product[]> {
         productId: item.productId,
         productName: item.productName,
         price: item.price,
-        productImageUrl: item.productImageUrl,
+        productImageUrl: safeImage(item.productImageUrl),
         categoryName: item.category?.categoryName ?? "",
         brandName: item.brand?.brandName ?? "",
         tags: Array.isArray(item.tags)

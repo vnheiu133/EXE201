@@ -8,6 +8,7 @@ public class OrderItem
     public int Quantity { get; set; }
     public decimal Price { get; set; }
     public int Status { get; set; } // 1 paid, 0 not pay yet
+    public string? SelectedVariant { get; set; }
     public virtual Orders Order { get; set; }
     public virtual Products Product { get; set; }
 }

@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { CartItem, useCart } from "@/contexts/cart-context"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
+import { getVariantOptions } from "@/lib/variants"
 
 type CartGroup = {
   shopId: string
@@ -19,15 +22,18 @@ type CartGroup = {
 }
 
 const currency = new Intl.NumberFormat("vi-VN")
-const cartItemId = (productId: number | string) => String(productId)
+const cartItemId = (productId: number | string, selectedVariant?: string) => 
+  selectedVariant ? `${productId}_${selectedVariant}` : String(productId)
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, checkoutStorageKey } = useCart()
+  const { cart, removeFromCart, updateQuantity, updateVariant, checkoutStorageKey } = useCart()
+  const { user } = useAuth()
+  const router = useRouter()
   const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   useEffect(() => {
     setSelectedIds((current) => {
-      const cartIds = cart.map((item) => cartItemId(item.productId))
+      const cartIds = cart.map((item) => cartItemId(item.productId, item.selectedVariant))
       if (current.length === 0) return cartIds
       return current.filter((id) => cartIds.includes(id))
     })
@@ -47,12 +53,12 @@ export default function CartPage() {
     }, {})
   }, [cart])
 
-  const selectedItems = cart.filter((item) => selectedIds.includes(cartItemId(item.productId)))
+  const selectedItems = cart.filter((item) => selectedIds.includes(cartItemId(item.productId, item.selectedVariant)))
   const selectedTotal = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const allSelected = cart.length > 0 && selectedIds.length === cart.length
 
-  const setItemSelected = (productId: number | string, checked: boolean) => {
-    const id = cartItemId(productId)
+  const setItemSelected = (productId: number | string, selectedVariant: string | undefined, checked: boolean) => {
+    const id = cartItemId(productId, selectedVariant)
     setSelectedIds((current) => {
       if (checked) return current.includes(id) ? current : [...current, id]
       return current.filter((currentId) => currentId !== id)
@@ -60,7 +66,7 @@ export default function CartPage() {
   }
 
   const setShopSelected = (items: CartItem[], checked: boolean) => {
-    const itemIds = items.map((item) => cartItemId(item.productId))
+    const itemIds = items.map((item) => cartItemId(item.productId, item.selectedVariant))
     setSelectedIds((current) => {
       if (checked) {
         return Array.from(new Set([...current, ...itemIds]))
@@ -70,16 +76,22 @@ export default function CartPage() {
   }
 
   const setAllSelected = (checked: boolean) => {
-    setSelectedIds(checked ? cart.map((item) => cartItemId(item.productId)) : [])
+    setSelectedIds(checked ? cart.map((item) => cartItemId(item.productId, item.selectedVariant)) : [])
   }
 
   const handleRemove = (item: CartItem) => {
-    removeFromCart(item.productId)
-    setSelectedIds((current) => current.filter((id) => id !== cartItemId(item.productId)))
+    removeFromCart(item.productId, item.selectedVariant)
+    setSelectedIds((current) => current.filter((id) => id !== cartItemId(item.productId, item.selectedVariant)))
     toast.error(`${item.productName} đã được xóa khỏi giỏ hàng.`)
   }
 
   const handleCheckout = () => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để tiến hành thanh toán.")
+      router.push("/login")
+      return
+    }
+
     if (selectedItems.length === 0) {
       toast.error("Vui lòng chọn ít nhất một sản phẩm để thanh toán.")
       return
@@ -87,7 +99,7 @@ export default function CartPage() {
 
     localStorage.setItem(checkoutStorageKey, JSON.stringify(selectedItems))
     localStorage.setItem("checkoutCartItems", JSON.stringify(selectedItems))
-    window.location.href = "/checkout"
+    router.push("/checkout")
   }
 
   if (cart.length === 0) {
@@ -130,7 +142,7 @@ export default function CartPage() {
               </div>
 
               {Object.values(groupedCart).map((group) => {
-                const groupIds = group.items.map((item) => cartItemId(item.productId))
+                const groupIds = group.items.map((item) => cartItemId(item.productId, item.selectedVariant))
                 const checkedCount = groupIds.filter((id) => selectedIds.includes(id)).length
                 const shopChecked = checkedCount === group.items.length
                 const shopIndeterminate = checkedCount > 0 && checkedCount < group.items.length
@@ -159,17 +171,17 @@ export default function CartPage() {
 
                     <div className="divide-y divide-gray-100">
                       {group.items.map((item) => {
-                        const isSelected = selectedIds.includes(cartItemId(item.productId))
+                        const isSelected = selectedIds.includes(cartItemId(item.productId, item.selectedVariant))
 
                         return (
                           <div
-                            key={item.productId}
+                            key={cartItemId(item.productId, item.selectedVariant)}
                             className="grid gap-4 p-4 lg:grid-cols-[44px_1fr_140px_150px_130px_48px] lg:items-center"
                           >
                             <div className="flex items-center">
                               <Checkbox
                                 checked={isSelected}
-                                onCheckedChange={(checked) => setItemSelected(item.productId, checked === true)}
+                                onCheckedChange={(checked) => setItemSelected(item.productId, item.selectedVariant, checked === true)}
                               />
                             </div>
 
@@ -183,6 +195,20 @@ export default function CartPage() {
                                 <h2 className="line-clamp-2 font-semibold text-gray-900 transition-colors hover:text-orange-500">
                                   <Link href={`/shop/product/${item.productId}`}>{item.productName}</Link>
                                 </h2>
+                                <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-xs text-gray-500 font-medium">Phân loại:</span>
+                                  <select
+                                    value={item.selectedVariant || ""}
+                                    onChange={(e) => updateVariant(item.productId, item.selectedVariant || "", e.target.value)}
+                                    className="text-xs text-[#e15c45] font-semibold bg-[#e15c45]/5 px-2 py-0.5 rounded border border-[#e15c45]/20 focus:outline-none focus:ring-1 focus:ring-[#e15c45] cursor-pointer"
+                                  >
+                                    {getVariantOptions(item.productName, item.categoryName).map((opt) => (
+                                      <option key={opt} value={opt} className="text-gray-800 bg-white font-normal">
+                                        {opt}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
                                 <p className="mt-1 text-xs text-gray-500 lg:hidden">
                                   {currency.format(item.price)} đ
                                 </p>
@@ -199,7 +225,7 @@ export default function CartPage() {
                                   type="button"
                                   className="flex w-9 items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40"
                                   disabled={item.quantity <= 1}
-                                  onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                  onClick={() => updateQuantity(item.productId, item.quantity - 1, item.selectedVariant)}
                                   aria-label="Giảm số lượng"
                                 >
                                   <Minus className="h-3.5 w-3.5" />
@@ -210,13 +236,13 @@ export default function CartPage() {
                                   className="h-9 w-14 rounded-none border-y-0 text-center shadow-none"
                                   onChange={(event) => {
                                     const nextQuantity = Number.parseInt(event.target.value, 10)
-                                    updateQuantity(item.productId, Number.isFinite(nextQuantity) ? nextQuantity : 1)
+                                    updateQuantity(item.productId, Number.isFinite(nextQuantity) ? nextQuantity : 1, item.selectedVariant)
                                   }}
                                 />
                                 <button
                                   type="button"
                                   className="flex w-9 items-center justify-center text-gray-600 hover:bg-gray-50"
-                                  onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                  onClick={() => updateQuantity(item.productId, item.quantity + 1, item.selectedVariant)}
                                   aria-label="Tăng số lượng"
                                 >
                                   <Plus className="h-3.5 w-3.5" />

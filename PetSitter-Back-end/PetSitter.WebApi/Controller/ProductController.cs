@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using PetSitter.DataAccess.Repository.Interfaces;
 using PetSitter.Models.DTO;
 using PetSitter.Models.Models;
@@ -12,10 +13,12 @@ namespace PetSitter.WebApi.Controller;
 public class ProductController : ControllerBase
 {
     private readonly IProductRepository _productRepository;
+    private readonly IHubContext<NotificationHub> _notificationHub;
     
-    public ProductController(IProductRepository productRepository)
+    public ProductController(IProductRepository productRepository, IHubContext<NotificationHub> notificationHub)
     {
         _productRepository = productRepository;
+        _notificationHub = notificationHub;
     }
 
     [HttpGet("list-products")]
@@ -118,6 +121,14 @@ public class ProductController : ControllerBase
             response.Success = true;
             response.Message = "Write review successful";
             response.Data = review;
+            await _notificationHub.Clients.All.SendAsync("ReceiveNotification", new
+            {
+                Type = "product-review",
+                Title = "Đánh giá sản phẩm mới",
+                Message = $"Một khách hàng vừa đánh giá {review.Rating}/5 sao cho sản phẩm.",
+                ActorName = "Khách hàng",
+                CreatedAt = DateTime.UtcNow.ToString("o")
+            });
         }
         catch (Exception ex)
         {

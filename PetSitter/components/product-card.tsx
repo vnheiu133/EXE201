@@ -4,6 +4,7 @@ import type React from "react";
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,6 +12,8 @@ import type { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/contexts/cart-context";
+import { useAuth } from "@/contexts/auth-context";
+import { getVariantOptions } from "@/lib/variants";
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +21,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { user } = useAuth();
+  const router = useRouter();
   const reviewCount = product.reviews?.length ?? 0;
   const averageRating =
     reviewCount > 0 ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount : product.rating ?? 0;
@@ -38,8 +43,14 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    addToCart(product, 1);
-    toast.success(`${product.productName} đã được thêm vào giỏ hàng!`);
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+      router.push("/login");
+      return;
+    }
+    const defaultVariant = getVariantOptions(product.productName, product.categoryName)[0] || "Tiêu chuẩn";
+    addToCart(product, 1, defaultVariant);
+    toast.success(`${product.productName} (${defaultVariant}) đã được thêm vào giỏ hàng!`);
   };
 
   return (

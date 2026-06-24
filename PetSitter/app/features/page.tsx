@@ -288,7 +288,7 @@ export default function ServicesPage() {
                                 <p className="text-2xl font-extrabold text-[#b44735]">
                                   {new Intl.NumberFormat("vi-VN").format(service.pricePerPerson)} đ
                                 </p>
-                                <p className="text-xs text-slate-500 font-medium">/ người</p>
+                                <p className="text-xs text-slate-500 font-medium">/ thú cưng</p>
                               </>
                             ) : (
                               <>

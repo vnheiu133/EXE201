@@ -17,3 +17,7 @@ PetSitter-Back-end/publish/
 
 # ASP.NET runtime keys
 PetSitter-Back-end/PetSitter.WebApi/DataProtection-Keys/
+
+# Caches and temp files
+_npm-cache/
+query_products.json

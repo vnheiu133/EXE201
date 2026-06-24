@@ -11,6 +11,8 @@ import { getAllBlogs, getBlogTags } from "@/components/api/blog";
 import type { Blog, BlogFilters, BlogTag } from "@/types/blog";
 
 // ==================== MOCK DATA FOR FALLBACK ====================
+const MOCK_DATE = "2024-04-01T00:00:00.000Z";
+
 const MOCK_AUTHOR = {
   userId: "author-1",
   fullName: "Đội ngũ PetSitter",
@@ -21,8 +23,8 @@ const MOCK_AUTHOR = {
   email: "contact@petsitter.com",
   phoneNumber: "",
   passwordHash: "",
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  createdAt: MOCK_DATE,
+  updatedAt: MOCK_DATE,
   shop: null,
   blogs: [],
   reviews: [],

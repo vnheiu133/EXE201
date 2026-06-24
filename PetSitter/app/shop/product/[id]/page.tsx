@@ -14,6 +14,7 @@ import { getProductById, getRelatedProduct, productReview, writeProductReview } 
 import type { Product } from "@/types/product"
 import type { Review } from "@/types/review"
 import { useCart } from "@/contexts/cart-context" 
+import { useAuth } from "@/contexts/auth-context" 
 import { toast } from "sonner" 
 import {
   Dialog,
@@ -25,6 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { DEFAULT_SHOP_AVATAR, getAvatarUrl } from "@/lib/avatar"
+import { getVariantOptions } from "@/lib/variants"
 
 export default function ProductDetailPage() {
   const params = useParams()
@@ -39,6 +41,15 @@ export default function ProductDetailPage() {
   const [loadingReviews, setLoadingReviews] = useState(false)
   const [averageRating, setAverageRating] = useState<number>(0)
   const { addToCart } = useCart() // Lấy hàm addToCart từ context
+  const { user } = useAuth()
+  const [selectedVariant, setSelectedVariant] = useState<string>("")
+
+  useEffect(() => {
+    if (product) {
+      const opts = getVariantOptions(product.productName, product.categoryName);
+      setSelectedVariant(opts[0]);
+    }
+  }, [product]);
 
   const [open, setOpen] = useState(false)
   const [rating, setRating] = useState(0)
@@ -78,8 +89,13 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
-    addToCart(product, quantity);
-    toast.success(`${product.productName} đã được thêm vào giỏ hàng!`);
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+      router.push("/login");
+      return;
+    }
+    addToCart(product, quantity, selectedVariant);
+    toast.success(`${product.productName} (${selectedVariant}) đã được thêm vào giỏ hàng!`);
   };
 
   useEffect(() => {
@@ -304,12 +320,13 @@ export default function ProductDetailPage() {
               <div className="flex items-center">
                 <span className="w-28 text-gray-500 shrink-0">Phân loại</span>
                 <div className="flex flex-wrap gap-2">
-                  {["Hộp 10 gói", "Hộp 20 gói", "Combo dùng thử"].map((variantOpt, idx) => (
+                  {product && getVariantOptions(product.productName, product.categoryName).map((variantOpt, idx) => (
                     <Button
                       key={idx}
                       variant="outline"
+                      onClick={() => setSelectedVariant(variantOpt)}
                       className={`h-9 px-4 rounded-sm border text-xs font-medium ${
-                        idx === 0
+                        selectedVariant === variantOpt
                           ? "border-[#ee4d2d] text-[#ee4d2d] bg-[#ee4d2d]/5 hover:bg-[#ee4d2d]/10"
                           : "border-gray-200 text-gray-800 hover:border-[#ee4d2d] hover:text-[#ee4d2d]"
                       }`}

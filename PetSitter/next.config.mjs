@@ -16,6 +16,14 @@ const nextConfig = {
         source: "/chathub/:path*",
         destination: `${apiOrigin}/chathub/:path*`,
       },
+      {
+        source: "/notificationhub",
+        destination: `${apiOrigin}/notificationhub`,
+      },
+      {
+        source: "/notificationhub/:path*",
+        destination: `${apiOrigin}/notificationhub/:path*`,
+      },
     ]
   },
   eslint: {
@@ -26,6 +34,16 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
   },
   devIndicators: false,
 }
